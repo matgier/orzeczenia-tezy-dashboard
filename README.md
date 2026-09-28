@@ -6,5 +6,12 @@ referencyjnego: model językowy wydobywa tezy z uzasadnienia prawnego, walidator
 
 Zakładki: Gemma 4 31B, Qwen3 32B i Bielik 11B v3 (vLLM), po 3 przebiegi.
 
-Strona: `index.html` (jeden plik; dane wbudowane, biblioteka grafu z CDN).
+Dashboard: `index.html` (jeden plik; dane wbudowane, biblioteka grafu z CDN).
 Generowany przez `3_run_evaluation.py --przebiegi` w repozytorium projektu.
+
+## Przeglądarka tez orzeczeń
+
+`przegladarka/index.html` – aplikacja w trzech widokach: wyszukiwanie orzeczeń
+i tez tematycznych, treść orzeczenia z podświetlonymi tezami i przepisami, graf
+tych samych tez w różnych orzeczeniach. Dane: tezy wydobyte i potwierdzone przez
+Gemmę 4 31B (vLLM). Generowana przez `aplikacja/zbuduj_dane.py`.

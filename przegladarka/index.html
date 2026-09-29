@@ -184,7 +184,7 @@ summary{cursor:pointer; font-weight:600; font-size:.9rem}
       <span id="g-licznik"></span><span class="g-wybor" id="g-filtr" hidden></span><span class="g-wybor" id="g-wybor" hidden></span>
     </div>
     <div class="graf-box"><div id="net"></div><div class="graf-info" id="g-info" hidden></div></div>
-    <p class="graf-opis"><b>Przeglądanie tematyczne:</b> wybierz temat (przyciski nad grafem) i opcjonalnie przepis – graf pokaże tylko orzeczenia i tezy z tego zakresu. Czarne prostokąty to orzeczenia – kolor ramki oznacza temat, kropki – potwierdzone tezy. Tezy powtórzone są tym większe i ciemniejsze, im w większej liczbie innych orzeczeń występują (ten sam co w treści orzeczenia): <span class="leg-pw" style="display:inline-flex;margin:0"><span><i style="background:var(--pw1)"></i>1</span><span><i style="background:var(--pw2)"></i>2–3</span><span><i style="background:var(--pw3)"></i>4+</span></span>; pozostałe – kolor tematu. <b style="color:var(--powt)">Pomarańczowa gruba linia</b> łączy tę samą tezę w dwóch różnych orzeczeniach (powtórzenie wykryte przez pipeline), przerywana – tezy podobne tematycznie powyżej wybranego progu. Kliknij tezę, aby wyróżnić jej orzeczenie, powtórzenia i tezy podobne (reszta grafu zostaje przygaszona); kliknij orzeczenie, aby wyróżnić jego tezy i ich powiązania (dwuklik otwiera treść orzeczenia). Przycisk „Pokaż w grafie” przy tezie w widoku orzeczenia otwiera graf od razu z wyróżnioną tezą.</p>
+    <p class="graf-opis"><b>Przeglądanie tematyczne:</b> wybierz temat (przyciski nad grafem) i opcjonalnie przepis – graf pokaże tylko orzeczenia i tezy z tego zakresu. Czarne prostokąty to orzeczenia – kolor ramki oznacza temat, kropki – potwierdzone tezy. Tezy identyczne (podobieństwo 1,00) są scalone w jeden węzeł z ciemną obwódką, połączony ze wszystkimi orzeczeniami, w których występują. Tezy powtórzone są tym większe i ciemniejsze, im w większej liczbie innych orzeczeń występują (ten sam co w treści orzeczenia): <span class="leg-pw" style="display:inline-flex;margin:0"><span><i style="background:var(--pw1)"></i>1</span><span><i style="background:var(--pw2)"></i>2–3</span><span><i style="background:var(--pw3)"></i>4+</span></span>; pozostałe – kolor tematu. <b style="color:var(--powt)">Pomarańczowa gruba linia</b> łączy tę samą tezę w dwóch różnych orzeczeniach (powtórzenie wykryte przez pipeline), przerywana – tezy podobne tematycznie powyżej wybranego progu. Kliknij tezę, aby wyróżnić jej orzeczenie, powtórzenia i tezy podobne (reszta grafu zostaje przygaszona); kliknij orzeczenie, aby wyróżnić jego tezy i ich powiązania (dwuklik otwiera treść orzeczenia). Przycisk „Pokaż w grafie” przy tezie w widoku orzeczenia otwiera graf od razu z wyróżnioną tezą.</p>
   </section>
 </main>
 
@@ -326,9 +326,19 @@ function pokazOrz(id,tezaId){
 
 /* ---------- WIDOK 3 ---------- */
 var net=null, nodes=null, edges=null, fokus=null;
+/* tezy identyczne (podobieństwo 1,00) scalone w jeden węzeł grafu; węzeł = teza reprezentująca grupę */
+var PROG_IDENT=0.995, GR={}, CZL={};
+(function(){ var par={}; function f(x){ while(par[x]&&par[x]!==x){ x=par[x]; } return x; }
+  D.powtorzenia.forEach(function(p){ if(p.sim<PROG_IDENT) return; par[p.a]=par[p.a]||p.a; par[p.b]=par[p.b]||p.b; var a=f(p.a), b=f(p.b); if(a!==b){ if(a<b) par[b]=a; else par[a]=b; } });
+  Object.keys(par).forEach(function(t){ var g=f(t); GR[t]=g; (CZL[g]=CZL[g]||[]).push(t); }); })();
+function nid(tid){ return GR[tid]||tid; }
+function czlonkowie(n){ return CZL[n]||[n]; }
+function orzWezla(n){ var s={}; czlonkowie(n).forEach(function(t){ s[TEZ[t].orzeczenie]=1; (POWT[t]||[]).forEach(function(x){ s[TEZ[x].orzeczenie]=1; }); }); return Object.keys(s); }
+function ileW(n){ return orzWezla(n).length-1; }
 function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
 function graf(nowyFokus){
   if(nowyFokus!==undefined) fokus=nowyFokus||null;
+  if(fokus && TEZ[fokus]) fokus=nid(fokus);
   pasekGrafu();
   var prog=+document.getElementById('g-prog').value, zPrz=document.getElementById('g-przepisy').checked;
   document.getElementById('g-prog-w').textContent=prog.toFixed(2).replace('.',',');
@@ -339,7 +349,7 @@ function graf(nowyFokus){
   pod=pod.filter(function(p){ return !pary[p.a+'|'+p.b]; });
   D.tezy.forEach(function(t){ if(!tylkoPow || wPowt[t.id]) widT[t.id]=1; });
   if(tylkoPow) pod.forEach(function(p){ widT[p.a]=widT[p.b]=1; });
-  if(fokus && TEZ[fokus]) widT[fokus]=1;
+  if(fokus && TEZ[fokus]) czlonkowie(fokus).forEach(function(x){ widT[x]=1; });
   if(fokus && ORZ[fokus]) ORZ[fokus].tezy.forEach(function(x){ widT[x]=1; });
   D.tezy.forEach(function(t){ if(widT[t.id] && filtrArt && !t.przepisy.some(function(p){return artykul(p)===filtrArt;}) && t.id!==fokus) delete widT[t.id]; });
   D.tezy.forEach(function(t){ if(widT[t.id] && !pasuje(ORZ[t.orzeczenie]) && t.id!==fokus && t.orzeczenie!==fokus) delete widT[t.id]; });
@@ -351,18 +361,21 @@ function graf(nowyFokus){
   D.orzeczenia.forEach(function(o){ if((tylkoPow && !widO[o.id] || !pasuje(o) || filtrArt && !widO[o.id]) && o.id!==fokus) return;
     N.push({id:o.id, label:o.sygnatura, shape:'box', margin:8, borderWidth:3, typ:'o',
     title:esc(o.sygnatura)+' — temat: '+esc(o.temat)+' ('+esc(o.sad||'')+')', color:{background:doc,border:css('--tm'+Math.min(4,temIdx(o))),highlight:{background:doc,border:css('--accent')}}, font:{color:docInk,size:12,face:'IBM Plex Sans',bold:true}}); });
-  D.tezy.forEach(function(t){ if(!widT[t.id]) return;
-    var kl=pwKlasa(t.id);
-    N.push({id:t.id, label:duzo?undefined:krotko(t.tekst,34), title:krotko(t.tekst,300)+(kl?' — powtórzona w '+ileOrz(t.id)+' innych orzeczeniach':''), shape:'dot', size:kl?Math.min(34,9+4*ileOrz(t.id)):7, typ:'t',
-    color:{background:kl?css('--'+kl):css('--tm'+Math.min(4,temIdx(ORZ[t.orzeczenie]))),border:kl?css('--powt'):'#ffffff00'}, borderWidth:kl?1.5:0, font:{color:dim,size:9,face:'IBM Plex Sans'}});
-    E.push({from:t.orzeczenie,to:t.id,color:{color:line},width:1}); });
-  var nPod=0;
-  D.powtorzenia.forEach(function(p){ if(!widT[p.a]||!widT[p.b]) return; E.push({from:p.a,to:p.b,color:{color:powt},width:4,title:'Ta sama teza w dwóch orzeczeniach (podobieństwo '+p.sim.toFixed(2)+')'}); });
-  pod.forEach(function(p){ if(!widT[p.a]||!widT[p.b]) return; nPod++; E.push({from:p.a,to:p.b,dashes:[5,4],color:{color:powt,opacity:.55},width:1.5,title:'Tezy podobne tematycznie ('+p.sim.toFixed(2)+')'}); });
+  var jestW={}, jestE={}, nScal=0;
+  function krawedz(a,b,opcje){ if(a===b) return false; var k=a<b?a+'|'+b:b+'|'+a; if(jestE[k]) return false; jestE[k]=1; opcje.from=a; opcje.to=b; E.push(opcje); return true; }
+  D.tezy.forEach(function(t){ if(!widT[t.id]) return; var w=nid(t.id);
+    if(!jestW[w]){ jestW[w]=1; var cz=czlonkowie(w), n=ileW(w), kl=n>=4?'pw3':n>=2?'pw2':n>=1?'pw1':'';
+      if(cz.length>1) nScal+=cz.length;
+      N.push({id:w, label:duzo?undefined:krotko(TEZ[w].tekst,34), title:krotko(TEZ[w].tekst,300)+(cz.length>1?' — identyczna teza (podobieństwo 1,00) w '+cz.length+' orzeczeniach, scalona w jeden węzeł':'')+(kl?' — występuje w '+(n+1)+' orzeczeniach':''),
+        shape:'dot', size:kl?Math.min(40,9+4*n):7, typ:'t',
+        color:{background:kl?css('--'+kl):css('--tm'+Math.min(4,temIdx(ORZ[t.orzeczenie]))),border:cz.length>1?css('--ink'):kl?css('--powt'):'#ffffff00'}, borderWidth:cz.length>1?2.5:kl?1.5:0, font:{color:dim,size:9,face:'IBM Plex Sans'}}); }
+    krawedz(t.orzeczenie,w,{color:{color:line},width:1}); });
+  var nPod=0, nPow=0;
+  D.powtorzenia.forEach(function(p){ if(!widT[p.a]||!widT[p.b]) return; if(krawedz(nid(p.a),nid(p.b),{color:{color:powt},width:4,title:'Ta sama teza w dwóch orzeczeniach (podobieństwo '+p.sim.toFixed(2)+')'})) nPow++; });
+  pod.forEach(function(p){ if(!widT[p.a]||!widT[p.b]) return; if(krawedz(nid(p.a),nid(p.b),{dashes:[5,4],color:{color:powt,opacity:.55},width:1.5,title:'Tezy podobne tematycznie ('+p.sim.toFixed(2)+')'})) nPod++; });
   if(zPrz){ var jest={}; D.tezy.forEach(function(t){ if(!widT[t.id]) return; t.przepisy.forEach(function(p){ var pid='p:'+p; if(!jest[pid]){ jest[pid]=1; N.push({id:pid,label:p,shape:'diamond',size:6,typ:'p',color:{background:law,border:law},font:{color:law,size:9,face:'IBM Plex Sans'}}); }
-    E.push({from:t.id,to:pid,dashes:[2,3],color:{color:law,opacity:.35},width:1}); }); }); }
-  var nPow=D.powtorzenia.filter(function(p){return widT[p.a]&&widT[p.b];}).length;
-  document.getElementById('g-licznik').textContent=nPow+' powtórzeń tezy · '+nPod+' par tez podobnych tematycznie · '+Object.keys(widO).length+' orzeczeń na grafie';
+    krawedz(nid(t.id),pid,{dashes:[2,3],color:{color:law,opacity:.35},width:1}); }); }); }
+  document.getElementById('g-licznik').textContent=(nScal?nScal+' tez identycznych scalonych · ':'')+nPow+' powtórzeń tezy · '+nPod+' par tez podobnych tematycznie · '+Object.keys(widO).length+' orzeczeń na grafie';
   nodes=new vis.DataSet(N); edges=new vis.DataSet(E);
   if(net) net.destroy();
   net=new vis.Network(document.getElementById('net'),{nodes:nodes,edges:edges},{physics:{solver:'forceAtlas2Based',forceAtlas2Based:{gravitationalConstant:-40,springLength:60},stabilization:{iterations:300}},
@@ -395,13 +408,14 @@ function wyroznij(id,przybliz){
     info.querySelectorAll('[data-t]').forEach(function(b){ b.onclick=function(){ wyroznij(b.dataset.t,true); }; });
     wyb.innerHTML='Wybrane orzeczenie: <b class="mono">'+esc(oo.sygnatura)+'</b><button aria-label="Wyczyść wybór">✕</button>'; wyb.hidden=false;
     wyb.querySelector('button').onclick=function(){ wyroznij(null); }; return; }
-  var t=TEZ[id], o=ORZ[t.orzeczenie], nr=o.tezy.indexOf(id)+1, pw=(POWT[id]||[]).map(function(x){return esc(ORZ[TEZ[x].orzeczenie].sygnatura);}).join(', ');
-  info.innerHTML='<button class="zamknij" aria-label="Zamknij">✕</button><b class="mono">'+esc(o.sygnatura)+' · teza '+nr+'</b><p>'+esc(t.tekst)+'</p>'+
+  var t=TEZ[id], o=ORZ[t.orzeczenie], nr=o.tezy.indexOf(id)+1, cz=czlonkowie(id), wGr={}; cz.forEach(function(x){ wGr[x]=1; });
+  var pw={}; cz.forEach(function(x){ (POWT[x]||[]).forEach(function(y){ if(!wGr[y]) pw[ORZ[TEZ[y].orzeczenie].sygnatura]=1; }); }); pw=Object.keys(pw).map(esc).join(', ');
+  info.innerHTML='<button class="zamknij" aria-label="Zamknij">✕</button>'+(cz.length>1?'<b>Teza identyczna w '+cz.length+' orzeczeniach</b> <span style="color:var(--ink-dim);font-size:.78rem">(podobieństwo 1,00 – jeden węzeł)</span><div class="znacz">'+cz.map(function(x){ var ox=ORZ[TEZ[x].orzeczenie]; return '<a class="tag" href="#o-'+ox.id+'--'+x+'">'+esc(ox.sygnatura)+'</a>'; }).join('')+'</div>':'<b class="mono">'+esc(o.sygnatura)+' · teza '+nr+'</b>')+'<p>'+esc(t.tekst)+'</p>'+
     (t.przepisy.length?'<div class="znacz">'+t.przepisy.map(function(p){return '<span class="tag law">'+esc(p)+'</span>';}).join('')+'</div>':'')+
-    (pw?'<p style="color:var(--powt)">Ta sama teza w: '+pw+'</p>':'<p style="color:var(--ink-dim)">Ta teza nie powtarza się w innych orzeczeniach tego zbioru.</p>')+
+    (pw?'<p style="color:var(--powt)">'+(cz.length>1?'Podobna (nie identyczna) także w: ':'Ta sama teza w: ')+pw+'</p>':'<p style="color:var(--ink-dim)">Ta teza nie powtarza się w innych orzeczeniach tego zbioru.</p>')+
     '<p><a href="#o-'+o.id+'--'+id+'">Otwórz orzeczenie →</a></p>';
   info.hidden=false; info.querySelector('.zamknij').onclick=function(){ wyroznij(null); };
-  wyb.innerHTML='Wybrana: <b class="mono">'+esc(o.sygnatura)+' · teza '+nr+'</b><button aria-label="Wyczyść wybór">✕</button>'; wyb.hidden=false;
+  wyb.innerHTML='Wybrana: <b class="mono">'+(cz.length>1?'teza identyczna w '+cz.length+' orzeczeniach':esc(o.sygnatura)+' · teza '+nr)+'</b><button aria-label="Wyczyść wybór">✕</button>'; wyb.hidden=false;
   wyb.querySelector('button').onclick=function(){ wyroznij(null); };
 }
 document.getElementById('g-prog').addEventListener('input',function(){graf();});

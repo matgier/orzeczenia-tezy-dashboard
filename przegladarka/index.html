@@ -133,6 +133,8 @@ summary{cursor:pointer; font-weight:600; font-size:.9rem}
 .szuflada header .akcje-p{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; align-items:center; font-size:.8rem; color:var(--ink-dim)}
 .szuflada .zamknij-p{border:1px solid var(--line); background:var(--surface-2); border-radius:999px; width:30px; height:30px; cursor:pointer; flex:0 0 auto}
 .szuflada .tresc-p{overflow:auto; padding:12px 18px 24px; display:grid; gap:12px}
+.p-teza mark.wsp-all{background:var(--pw3); color:var(--ink); border-radius:2px; padding:0 1px}
+.p-teza mark.wsp{background:var(--pw1); color:var(--ink); border-radius:2px; padding:0 1px}
 .p-art{margin-top:10px; background:var(--law-soft); border-radius:8px; padding:10px 12px; font-size:.84rem; line-height:1.55; max-height:38vh; overflow:auto}
 .p-art .tekst-art{white-space:pre-line}
 .p-art .zr{margin-top:6px; font-size:.72rem; color:var(--ink-dim)}
@@ -422,6 +424,19 @@ function grupuj(prog){ progScal=prog; GR={}; CZL={}; var par={}; function f(x){ 
   D.powtorzenia.forEach(function(p){ if(p.sim<prog) return; par[p.a]=par[p.a]||p.a; par[p.b]=par[p.b]||p.b; var a=f(p.a), b=f(p.b); if(a!==b){ if(a<b) par[b]=a; else par[a]=b; } });
   Object.keys(par).forEach(function(t){ var g=f(t); GR[t]=g; (CZL[g]=CZL[g]||[]).push(t); }); }
 grupuj(PROG_IDENT);
+/* porównanie brzmień tez scalonych w jeden węzeł: słowa wspólne dla wszystkich / dla części tez */
+var STOP={};'i w z na do że się nie jest to o a od po przez dla jak oraz lub przy za ze ich jego jej go tym tego tej te ten ta być może które który która których które co ale gdy jeśli też tak już nie iż zaś bowiem także również tylko jako czy albo ani'.split(' ').forEach(function(w){STOP[w]=1;});
+function rdzen(w){ w=bezOgonkow(w); return w.length>6?w.slice(0,6):w; }
+function brzmienia(ids){
+  var zb=ids.map(function(x){ var s={}; (TEZ[x].tekst.match(/[\p{L}\d]+/gu)||[]).forEach(function(w){ if(!STOP[w.toLowerCase()]&&w.length>1) s[rdzen(w)]=1; }); return s; });
+  var ile={}; zb.forEach(function(s){ Object.keys(s).forEach(function(k){ ile[k]=(ile[k]||0)+1; }); });
+  return '<div class="leg-pw" style="margin:6px 0"><span><i style="background:var(--pw3)"></i>słowo we wszystkich tezach</span><span><i style="background:var(--pw1)"></i>w części tez</span><span>bez koloru – tylko w tej tezie</span></div>'+
+    ids.map(function(x,i){ var ox=ORZ[TEZ[x].orzeczenie], s=zb[i], kl=Object.keys(s), wsp=kl.filter(function(k){return ile[k]>1;}).length;
+      var html=TEZ[x].tekst.split(/([\p{L}\d]+)/u).map(function(cz_,j){ if(j%2===0) return esc(cz_); var k=rdzen(cz_);
+        if(STOP[cz_.toLowerCase()]||cz_.length<2||!s[k]) return esc(cz_);
+        return ile[k]===ids.length?'<mark class="wsp-all">'+esc(cz_)+'</mark>':ile[k]>1?'<mark class="wsp">'+esc(cz_)+'</mark>':esc(cz_); }).join('');
+      return '<div class="p-teza"><a href="#o-'+ox.id+'--'+x+'">'+esc(ox.sygnatura)+'</a> <span style="color:var(--ink-dim);font-size:.74rem">· '+Math.round(100*wsp/Math.max(1,kl.length))+'% słów wspólnych z innymi</span><div style="margin-top:4px">'+html+'</div></div>'; }).join('');
+}
 function opisScal(){ return progScal>=PROG_IDENT?'identyczne, 1,00':'podobieństwo ≥ '+progScal.toFixed(2).replace('.',','); }
 function nid(tid){ return GR[tid]||tid; }
 function czlonkowie(n){ return CZL[n]||[n]; }
@@ -506,7 +521,7 @@ function wyroznij(id,przybliz){
   var t=TEZ[id], o=ORZ[t.orzeczenie], nr=o.tezy.indexOf(id)+1, cz=czlonkowie(id), wGr={}; cz.forEach(function(x){ wGr[x]=1; });
   var pw={}; cz.forEach(function(x){ (POWT[x]||[]).forEach(function(y){ if(!wGr[y]) pw[ORZ[TEZ[y].orzeczenie].sygnatura]=1; }); }); pw=Object.keys(pw).map(esc).join(', ');
   info.innerHTML='<button class="zamknij" aria-label="Zamknij">✕</button>'+(cz.length>1?'<b>'+(progScal>=PROG_IDENT?'Teza identyczna w ':'Tezy scalone z ')+cz.length+' orzeczeń</b> <span style="color:var(--ink-dim);font-size:.78rem">('+opisScal()+' – jeden węzeł)</span><div class="znacz">'+cz.map(function(x){ var ox=ORZ[TEZ[x].orzeczenie]; return '<a class="tag" href="#o-'+ox.id+'--'+x+'">'+esc(ox.sygnatura)+'</a>'; }).join('')+'</div>':'<b class="mono">'+esc(o.sygnatura)+' · teza '+nr+'</b>')+'<p>'+esc(t.tekst)+'</p>'+
-    (cz.length>1 && progScal<PROG_IDENT?'<details><summary>Brzmienie w każdym orzeczeniu ('+cz.length+')</summary>'+cz.map(function(x){ var ox=ORZ[TEZ[x].orzeczenie]; return '<div class="p-teza"><a href="#o-'+ox.id+'--'+x+'">'+esc(ox.sygnatura)+'</a>: '+esc(krotko(TEZ[x].tekst,300))+'</div>'; }).join('')+'</details>':'')+
+    (cz.length>1 && progScal<PROG_IDENT?'<details open><summary>Brzmienie w każdym orzeczeniu ('+cz.length+')</summary>'+brzmienia(cz)+'</details>':'')+
     (t.przepisy.length?'<div class="znacz">'+t.przepisy.map(function(p){return '<span class="tag law" data-p="'+esc(p)+'" role="button" tabindex="0" title="Pokaż wszystkie tezy z tym przepisem">'+esc(p)+'</span>';}).join('')+'</div>':'')+
     (pw?'<p style="color:var(--powt)">'+(cz.length>1?'Podobna (poniżej progu scalania) także w: ':'Ta sama teza w: ')+pw+'</p>':'<p style="color:var(--ink-dim)">Ta teza nie powtarza się w innych orzeczeniach tego zbioru.</p>')+
     '<p><a href="#o-'+o.id+'--'+id+'">Otwórz orzeczenie →</a></p>';

@@ -12,6 +12,6 @@ Generowany przez `3_run_evaluation.py --przebiegi` w repozytorium projektu.
 ## Przeglądarka tez orzeczeń
 
 `przegladarka/index.html` – aplikacja w trzech widokach: wyszukiwanie orzeczeń
-i tez tematycznych, treść orzeczenia z podświetlonymi tezami i przepisami, graf
+i tez tematycznych (114 orzeczeń: 10 z arkusza, 104 z SAOS), treść orzeczenia z podświetlonymi tezami i przepisami, graf
 tych samych tez w różnych orzeczeniach. Dane: tezy wydobyte i potwierdzone przez
 Gemmę 4 31B (vLLM). Generowana przez `aplikacja/zbuduj_dane.py`.

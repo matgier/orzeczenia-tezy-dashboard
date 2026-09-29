@@ -8,7 +8,7 @@
 :root{
   --bg:#f4f3ee; --surface:#ffffff; --surface-2:#f8f7f3; --ink:#15181b; --ink-dim:#55595c; --ink-faint:#85898b;
   --line:#dddbd3; --accent:#8a5a14; --accent-ink:#ffffff; --focus:#2a78d6;
-  --hl:#fde7a8; --hl-akt:#f6c945; --law:#1f7a5c; --law-soft:#e3f2ec; --powt:#eb6834; --pw1:#fcd9c4; --pw2:#f7ac85; --pw3:#ee8250; --heat0:#f3f1ea;
+  --hl:#fde7a8; --hl-akt:#f6c945; --law:#1f7a5c; --law-soft:#e3f2ec; --powt:#eb6834; --pw1:#fcd9c4; --pw2:#f7ac85; --pw3:#ee8250; 
   --s-najw:#b87400; --s-najw-bg:#fff6df; --s-pow:#2a78d6; --s-pow-bg:#eaf2fc; --s-adm:#15876a; --s-adm-bg:#e4f4ee;
   --s-kio:#b0487a; --s-kio-bg:#fbeaf2; --s-tk:#4a3aa7; --s-tk-bg:#eeecfa; --s-inny:#6b6f72; --s-inny-bg:#f1f1ef;
   --node-doc:#15181b; --node-doc-ink:#ffffff;
@@ -18,7 +18,7 @@
   :root:not([data-theme="light"]){ color-scheme:dark;
     --bg:#111416; --surface:#1a1e21; --surface-2:#15191b; --ink:#eceae4; --ink-dim:#a6a9a8; --ink-faint:#747877;
     --line:#2c3134; --accent:#e0a54a; --accent-ink:#1a1204; --focus:#6aa8ee;
-    --hl:#4a3d14; --hl-akt:#8a6b10; --law:#5cc79f; --law-soft:#15302a; --powt:#f08050; --pw1:#4a2a1a; --pw2:#76391d; --pw3:#a34a22; --heat0:#20252a;
+    --hl:#4a3d14; --hl-akt:#8a6b10; --law:#5cc79f; --law-soft:#15302a; --powt:#f08050; --pw1:#4a2a1a; --pw2:#76391d; --pw3:#a34a22;
     --s-najw:#e8b54a; --s-najw-bg:#2e2512; --s-pow:#6aa8ee; --s-pow-bg:#16243a; --s-adm:#4fc9a3; --s-adm-bg:#12302a;
     --s-kio:#e27aa5; --s-kio-bg:#34182a; --s-tk:#9085e9; --s-tk-bg:#221d40; --s-inny:#a6a9a8; --s-inny-bg:#222628;
     --node-doc:#eceae4; --node-doc-ink:#111416; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px -14px rgba(0,0,0,.6); }
@@ -26,7 +26,7 @@
 :root[data-theme="dark"]{ color-scheme:dark;
   --bg:#111416; --surface:#1a1e21; --surface-2:#15191b; --ink:#eceae4; --ink-dim:#a6a9a8; --ink-faint:#747877;
   --line:#2c3134; --accent:#e0a54a; --accent-ink:#1a1204; --focus:#6aa8ee;
-  --hl:#4a3d14; --hl-akt:#8a6b10; --law:#5cc79f; --law-soft:#15302a; --powt:#f08050; --pw1:#4a2a1a; --pw2:#76391d; --pw3:#a34a22; --heat0:#20252a;
+  --hl:#4a3d14; --hl-akt:#8a6b10; --law:#5cc79f; --law-soft:#15302a; --powt:#f08050; --pw1:#4a2a1a; --pw2:#76391d; --pw3:#a34a22;
   --s-najw:#e8b54a; --s-najw-bg:#2e2512; --s-pow:#6aa8ee; --s-pow-bg:#16243a; --s-adm:#4fc9a3; --s-adm-bg:#12302a;
   --s-kio:#e27aa5; --s-kio-bg:#34182a; --s-tk:#9085e9; --s-tk-bg:#221d40; --s-inny:#a6a9a8; --s-inny-bg:#222628;
   --node-doc:#eceae4; --node-doc-ink:#111416; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px -14px rgba(0,0,0,.6); }
@@ -115,21 +115,6 @@ summary{cursor:pointer; font-weight:600; font-size:.9rem}
 .teza.pw1 .nr,.teza.pw2 .nr,.teza.pw3 .nr{color:var(--powt)}
 .leg-pw{display:flex; flex-wrap:wrap; gap:6px 12px; align-items:center; font-size:.74rem; color:var(--ink-dim); margin:0 0 12px}
 .leg-pw i{display:inline-block; width:22px; height:12px; border-radius:3px; vertical-align:-1px; margin-right:4px}
-.heat-pasek{display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; margin-bottom:10px; font-size:.82rem; color:var(--ink-dim)}
-.heat-pasek select{font:inherit; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:3px 6px}
-.heat-wrap{overflow:auto; max-height:72vh; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:10px}
-.heat{display:grid; gap:1px; font-size:.68rem; width:max-content}
-.heat .hc{width:15px; height:15px; border-radius:2px; background:var(--heat0); cursor:pointer; padding:0; border:0}
-.heat .hc.diag{background:transparent; outline:1px dashed var(--line); outline-offset:-3px; cursor:default}
-.heat .hc:hover,.heat .hc.akt{outline:2px solid var(--ink); outline-offset:0}
-.heat .rl{padding-right:8px; white-space:nowrap; text-align:right; font-family:'IBM Plex Mono',monospace; color:var(--ink-dim); line-height:15px; cursor:pointer; background:none; border:0; font-size:.68rem}
-.heat .rl:hover{color:var(--accent)}
-.heat .cl{writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; font-family:'IBM Plex Mono',monospace; color:var(--ink-dim); padding-top:6px; width:15px; line-height:15px}
-.heat-skala{display:flex; align-items:center; gap:6px; font-size:.74rem; color:var(--ink-dim)}
-.heat-skala span.g{width:120px; height:10px; border-radius:3px; background:linear-gradient(90deg,var(--heat0),var(--powt))}
-.heat-info{margin-top:12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:14px 16px; font-size:.86rem}
-.heat-info .para{border-top:1px solid var(--line); padding:8px 0}
-.heat-info .para p{margin:4px 0}
 .wgrafie{display:inline-flex; align-items:center; gap:5px; margin-top:8px; font-size:.76rem; font-weight:600; color:var(--accent); text-decoration:none; border:1px solid var(--line); border-radius:999px; padding:3px 10px; background:var(--surface)}
 .wgrafie:hover{border-color:var(--accent)}
 .teza.akt .wgrafie{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
@@ -161,7 +146,6 @@ summary{cursor:pointer; font-weight:600; font-size:.9rem}
   <nav class="widoki" aria-label="Widoki">
     <a href="#orzeczenia" id="nav-orzeczenia">Orzeczenia</a>
     <a href="#graf" id="nav-graf">Graf tez</a>
-    <a href="#heatmapa" id="nav-heat">Heatmapa</a>
   </nav>
 </div></header>
 
@@ -195,18 +179,7 @@ summary{cursor:pointer; font-weight:600; font-size:.9rem}
       <span id="g-licznik"></span><span class="g-wybor" id="g-filtr" hidden></span><span class="g-wybor" id="g-wybor" hidden></span>
     </div>
     <div class="graf-box"><div id="net"></div><div class="graf-info" id="g-info" hidden></div></div>
-    <p class="graf-opis">Czarne prostokąty to orzeczenia, kropki – potwierdzone tezy. <b style="color:var(--powt)">Pomarańczowa gruba linia</b> łączy tę samą tezę w dwóch różnych orzeczeniach (powtórzenie wykryte przez pipeline), przerywana – tezy podobne tematycznie powyżej wybranego progu. Kliknij tezę, aby wyróżnić jej orzeczenie, powtórzenia i tezy podobne (reszta grafu zostaje przygaszona); kliknij orzeczenie, aby wyróżnić jego tezy i ich powiązania (dwuklik otwiera treść orzeczenia). Przycisk „Pokaż w grafie” przy tezie w widoku orzeczenia otwiera graf od razu z wyróżnioną tezą.</p>
-  </section>
-  <!-- WIDOK 4 (dodany): heatmapa – wspólne tezy par orzeczeń -->
-  <section class="widok" id="w4" hidden>
-    <div class="heat-pasek">
-      <label>kolor komórki: <select id="h-miara"><option value="n">liczba wspólnych tez</option><option value="max">najwyższe podobieństwo tez</option></select></label>
-      <label><input type="checkbox" id="h-powiazane" checked> tylko orzeczenia z powtórzeniami</label>
-      <span class="heat-skala"><span id="h-min">0</span><span class="g"></span><span id="h-max"></span></span>
-      <span id="h-licznik"></span><span class="g-wybor" id="h-filtr" hidden></span>
-    </div>
-    <div class="heat-wrap"><div class="heat" id="heat"></div></div>
-    <div class="heat-info" id="h-info"><b>Kliknij komórkę,</b> aby zobaczyć tezy wspólne dla dwóch orzeczeń; kliknij sygnaturę, aby otworzyć orzeczenie. Wiersze i kolumny są uporządkowane według skupisk: orzeczenia dzielące tezy leżą obok siebie, więc skupiska widać jako ciemniejsze kwadraty przy przekątnej.</div>
+    <p class="graf-opis">Czarne prostokąty to orzeczenia, kropki – potwierdzone tezy. Tezy powtórzone mają kolor zależny od liczby innych orzeczeń, w których występują (ten sam co w treści orzeczenia): <span class="leg-pw" style="display:inline-flex;margin:0"><span><i style="background:var(--pw1)"></i>1</span><span><i style="background:var(--pw2)"></i>2–3</span><span><i style="background:var(--pw3)"></i>4+</span></span>; pozostałe – kolor typu sądu. <b style="color:var(--powt)">Pomarańczowa gruba linia</b> łączy tę samą tezę w dwóch różnych orzeczeniach (powtórzenie wykryte przez pipeline), przerywana – tezy podobne tematycznie powyżej wybranego progu. Kliknij tezę, aby wyróżnić jej orzeczenie, powtórzenia i tezy podobne (reszta grafu zostaje przygaszona); kliknij orzeczenie, aby wyróżnić jego tezy i ich powiązania (dwuklik otwiera treść orzeczenia). Przycisk „Pokaż w grafie” przy tezie w widoku orzeczenia otwiera graf od razu z wyróżnioną tezą.</p>
   </section>
 </main>
 
@@ -356,8 +329,9 @@ function graf(nowyFokus){
     N.push({id:o.id, label:o.sygnatura, shape:'box', margin:8, borderWidth:3, typ:'o',
     color:{background:doc,border:css('--s-'+sadKl(o)),highlight:{background:doc,border:css('--accent')}}, font:{color:docInk,size:12,face:'IBM Plex Sans',bold:true}}); });
   D.tezy.forEach(function(t){ if(!widT[t.id]) return;
-    N.push({id:t.id, label:duzo?undefined:krotko(t.tekst,34), title:krotko(t.tekst,300), shape:'dot', size:wPowt[t.id]?13:8, typ:'t',
-    color:{background:wPowt[t.id]?powt:css('--s-'+sadKl(ORZ[t.orzeczenie])),border:'#ffffff00'}, font:{color:dim,size:9,face:'IBM Plex Sans'}});
+    var kl=pwKlasa(t.id);
+    N.push({id:t.id, label:duzo?undefined:krotko(t.tekst,34), title:krotko(t.tekst,300)+(kl?' — powtórzona w '+ileOrz(t.id)+' innych orzeczeniach':''), shape:'dot', size:{pw1:10,pw2:13,pw3:16}[kl]||8, typ:'t',
+    color:{background:kl?css('--'+kl):css('--s-'+sadKl(ORZ[t.orzeczenie])),border:kl?css('--powt'):'#ffffff00'}, borderWidth:kl?1.5:0, font:{color:dim,size:9,face:'IBM Plex Sans'}});
     E.push({from:t.orzeczenie,to:t.id,color:{color:line},width:1}); });
   var nPod=0;
   D.powtorzenia.forEach(function(p){ if(!widT[p.a]||!widT[p.b]) return; E.push({from:p.a,to:p.b,color:{color:powt},width:4,title:'Ta sama teza w dwóch orzeczeniach (podobieństwo '+p.sim.toFixed(2)+')'}); });
@@ -412,51 +386,14 @@ document.getElementById('g-przepisy').addEventListener('change',function(){graf(
 document.getElementById('g-powiazane').addEventListener('change',function(){graf();});
 if(D.tezy.length>120){ document.getElementById('g-powiazane').checked=true; document.getElementById('g-prog').value='0.2'; }
 
-/* ---------- WIDOK 4: heatmapa ---------- */
-function heatmapa(){
-  var miara=document.getElementById('h-miara').value, tylko=document.getElementById('h-powiazane').checked;
-  var M={}; D.powtorzenia.forEach(function(p){ var a=TEZ[p.a].orzeczenie, b=TEZ[p.b].orzeczenie, k=a<b?a+'|'+b:b+'|'+a;
-    var m=M[k]||(M[k]={n:0,max:0,pary:[]}); m.n++; m.max=Math.max(m.max,p.sim); m.pary.push(p); });
-  var st={}; Object.keys(M).forEach(function(k){ var ab=k.split('|'); st[ab[0]]=(st[ab[0]]||0)+M[k].n; st[ab[1]]=(st[ab[1]]||0)+M[k].n; });
-  var wybrane=D.orzeczenia.filter(function(o){ return pasuje(o) && (!tylko || st[o.id]); }).map(function(o){return o.id;});
-  var w={}; wybrane.forEach(function(x){w[x]=1;});
-  // porządek: skupiska (spójne składowe), w skupisku malejąco według liczby powtórzeń
-  var sas={}; Object.keys(M).forEach(function(k){ var ab=k.split('|'); if(w[ab[0]]&&w[ab[1]]){ (sas[ab[0]]=sas[ab[0]]||[]).push(ab[1]); (sas[ab[1]]=sas[ab[1]]||[]).push(ab[0]); } });
-  var odw={}, skup=[]; wybrane.slice().sort(function(a,b){return (st[b]||0)-(st[a]||0);}).forEach(function(s0){ if(odw[s0]) return; var c=[], q=[s0]; odw[s0]=1;
-    while(q.length){ var x=q.shift(); c.push(x); (sas[x]||[]).sort(function(a,b){return (st[b]||0)-(st[a]||0);}).forEach(function(y){ if(!odw[y]){ odw[y]=1; q.push(y); } }); } skup.push(c); });
-  skup.sort(function(a,b){return b.length-a.length;}); var kol=[].concat.apply([],skup), n=kol.length;
-  var wart=function(a,b){ var m=M[a<b?a+'|'+b:b+'|'+a]; return m?(miara==='n'?m.n:m.max):0; };
-  var mx=0; kol.forEach(function(a){ kol.forEach(function(b){ if(a!==b) mx=Math.max(mx,wart(a,b)); }); });
-  document.getElementById('h-max').textContent=miara==='n'?mx+' tez':mx.toFixed(2).replace('.',',');
-  document.getElementById('h-licznik').textContent=n+' orzeczeń · '+(function(k){ return k+' '+(k===1?'skupisko':(k%10>=2&&k%10<=4&&(k%100<10||k%100>=20))?'skupiska':'skupisk'); })(skup.filter(function(c){return c.length>1;}).length);
-  var aktywne=[filtrTem,filtrZr,filtrSad].filter(function(f){return f!=='wszystkie';}), hf=document.getElementById('h-filtr'); hf.hidden=!aktywne.length;
-  hf.innerHTML='filtr z listy: <b>'+aktywne.map(esc).join(' · ')+'</b> <button aria-label="Pokaż wszystkie orzeczenia">✕</button>';
-  hf.querySelector('button').onclick=function(){ filtrTem=filtrZr=filtrSad='wszystkie'; chipy(); lista(); heatmapa(); };
-  var el=document.getElementById('heat'); el.style.gridTemplateColumns='auto repeat('+n+',15px)';
-  var h='<span></span>'+kol.map(function(x){return '<span class="cl">'+esc(ORZ[x].sygnatura)+'</span>';}).join('');
-  kol.forEach(function(a){ h+='<button class="rl" data-o="'+a+'" title="'+esc(ORZ[a].sad||'')+'">'+esc(ORZ[a].sygnatura)+'</button>';
-    kol.forEach(function(b){ if(a===b){ h+='<span class="hc diag"></span>'; return; } var v=wart(a,b);
-      h+=v?'<button class="hc" data-a="'+a+'" data-b="'+b+'" style="background:color-mix(in srgb, var(--powt) '+Math.round(25+75*v/mx)+'%, var(--heat0))" title="'+esc(ORZ[a].sygnatura)+' × '+esc(ORZ[b].sygnatura)+': '+(miara==='n'?v+' wspólnych tez':'podobieństwo '+v.toFixed(2))+'"></button>':'<span class="hc"></span>'; }); });
-  el.innerHTML=n?h:'<div class="pusto">Brak orzeczeń z powtórzeniami dla wybranych filtrów.</div>';
-  el.querySelectorAll('.rl').forEach(function(b){ b.onclick=function(){ location.hash='o-'+b.dataset.o; }; });
-  el.querySelectorAll('button.hc').forEach(function(c){ c.onclick=function(){ el.querySelectorAll('.hc.akt').forEach(function(x){x.classList.remove('akt');}); c.classList.add('akt');
-    var a=c.dataset.a, b=c.dataset.b, m=M[a<b?a+'|'+b:b+'|'+a];
-    document.getElementById('h-info').innerHTML='<b><a href="#o-'+a+'">'+esc(ORZ[a].sygnatura)+'</a> × <a href="#o-'+b+'">'+esc(ORZ[b].sygnatura)+'</a></b> – '+m.n+' '+(m.n===1?'wspólna teza':'wspólne tezy')+', najwyższe podobieństwo '+m.max.toFixed(2).replace('.',',')+
-      m.pary.map(function(p){ var x=TEZ[p.a].orzeczenie===a?p.a:p.b, y=x===p.a?p.b:p.a;
-        return '<div class="para"><span class="mono" style="color:var(--powt)">podobieństwo '+p.sim.toFixed(2).replace('.',',')+'</span><p><a href="#o-'+a+'--'+x+'">'+esc(ORZ[a].sygnatura)+'</a>: '+esc(krotko(TEZ[x].tekst,300))+'</p><p><a href="#o-'+b+'--'+y+'">'+esc(ORZ[b].sygnatura)+'</a>: '+esc(krotko(TEZ[y].tekst,300))+'</p></div>'; }).join(''); }; });
-}
-document.getElementById('h-miara').addEventListener('change',heatmapa);
-document.getElementById('h-powiazane').addEventListener('change',heatmapa);
-
 /* ---------- nawigacja (hash) ---------- */
 function trasa(){
   var h=location.hash.replace('#','')||'orzeczenia', w1=document.getElementById('w1'), w2=document.getElementById('w2'), w3=document.getElementById('w3');
-  var w4=document.getElementById('w4'); w1.hidden=w2.hidden=w3.hidden=w4.hidden=true; document.getElementById('nav-heat').removeAttribute('aria-current');
+  w1.hidden=w2.hidden=w3.hidden=true;
   document.getElementById('nav-orzeczenia').removeAttribute('aria-current'); document.getElementById('nav-graf').removeAttribute('aria-current');
   var mt=/^temat-(\d+)$/.exec(h); if(mt && tematyLista[+mt[1]]){ filtrTem=tematyLista[+mt[1]]; chipy(); lista(); h='orzeczenia'; }
   if(h.indexOf('o-')===0){ var r=h.slice(2).split('--'); w2.hidden=false; document.getElementById('nav-orzeczenia').setAttribute('aria-current','page'); pokazOrz(r[0],r[1]); }
   else if(h.indexOf('graf')===0){ w3.hidden=false; document.getElementById('nav-graf').setAttribute('aria-current','page'); graf(h.split('--')[1]||null); }
-  else if(h==='heatmapa'){ w4.hidden=false; document.getElementById('nav-heat').setAttribute('aria-current','page'); heatmapa(); }
   else { w1.hidden=false; document.getElementById('nav-orzeczenia').setAttribute('aria-current','page'); }
 }
 window.addEventListener('hashchange',trasa);

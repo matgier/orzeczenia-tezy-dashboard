@@ -133,6 +133,11 @@ summary{cursor:pointer; font-weight:600; font-size:.9rem}
 .szuflada header .akcje-p{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; align-items:center; font-size:.8rem; color:var(--ink-dim)}
 .szuflada .zamknij-p{border:1px solid var(--line); background:var(--surface-2); border-radius:999px; width:30px; height:30px; cursor:pointer; flex:0 0 auto}
 .szuflada .tresc-p{overflow:auto; padding:12px 18px 24px; display:grid; gap:12px}
+.sem-pasek{flex-basis:100%; font-size:.78rem; color:var(--ink-dim); margin:6px 2px 0}
+.sem-pasek label{color:var(--ink); font-weight:600}
+.sem-met{color:var(--ink-faint)}
+.sem-sim{display:inline-block; width:54px; height:7px; border-radius:4px; background:var(--surface-2); vertical-align:middle; overflow:hidden}
+.sem-sim i{display:block; height:100%; background:var(--accent)}
 .p-teza mark.wsp-all{background:var(--g4); color:var(--ink); border-radius:2px; padding:0 1px; font-weight:600}
 .leg-pw i.grad{width:96px; background:linear-gradient(90deg, var(--g1), var(--g2), var(--g3), var(--g4))}
 .p-teza mark.wsp{background:var(--g1); color:var(--ink); border-radius:2px; padding:0 1px}
@@ -230,11 +235,13 @@ a.tag{text-decoration:none}
     <h2 id="w1-h" class="sr" hidden>Orzeczenia</h2>
     <div class="akcje" role="group" aria-label="Tryb wyszukiwania">
       <button class="akcja" id="tryb-orz" aria-pressed="true"><span class="ik" aria-hidden="true">⚖</span><span><b>Wyszukaj orzeczenia</b><span>sygnatura, sąd, treść orzeczenia</span></span></button>
-      <button class="akcja" id="tryb-tez" aria-pressed="false"><span class="ik" aria-hidden="true">❝</span><span><b>Wyszukaj tezy tematyczne</b><span>treść tezy lub powołany przepis</span></span></button>
+      <button class="akcja" id="tryb-tez" aria-pressed="false"><span class="ik" aria-hidden="true">❝</span><span><b>Wyszukaj tezy tematyczne</b><span>pytanie pełnym zdaniem, treść tezy lub przepis</span></span></button>
       <button class="akcja" id="tryb-prz" aria-pressed="false"><span class="ik" aria-hidden="true">§</span><span><b>Wyszukaj przepis</b><span>numer, kodeks albo opis problemu</span></span></button>
     </div>
     <div class="szukaj">
       <input type="search" id="q" placeholder="Szukaj…" autocomplete="off" aria-label="Szukaj">
+      <!-- (dodane) wyszukiwanie tez po znaczeniu: informacja i przełącznik, widoczne w trybie „Wyszukaj tezy” -->
+      <div class="sem-pasek" id="sem-pasek" hidden></div>
       <div class="filtry" id="filtry"></div>
     </div>
     <div class="filtry" id="przepisy-chips" hidden></div>
@@ -345,9 +352,36 @@ function przepisyChipy(){
   box.querySelectorAll('[data-p]').forEach(function(b){ b.onclick=function(){ filtrPrz=b.dataset.p||null; przepisyChipy(); lista(); }; });
 }
 function pasuje(o){ return (!filtrHaslo||(o.hasla||[]).indexOf(filtrHaslo)>=0)&&(!filtrSedzia||(o.sklad||[]).some(function(j){return j.n===filtrSedzia;}))&&(filtrTem==='wszystkie'||o.temat===filtrTem)&&(filtrZr==='wszystkie'||o.zrodlo===filtrZr)&&(filtrSad==='wszystkie'||o.typ_sadu===filtrSad); }
+/* wyszukiwanie tez po znaczeniu (pytanie pełnym zdaniem): embedding zapytania i indeks HNSW działają po stronie
+   serwera (aplikacja/serwer.py). Strona wykrywa serwer przez api/stan; bez niego zostaje wyszukiwanie po słowach. */
+var SEM=null, semCzas=null, semNr=0;
+function semWlaczone(){ var c=document.getElementById('sem-wl'); return !!SEM && (!c || c.checked); }
+function semPasek(){ var el=document.getElementById('sem-pasek'); if(!el) return; el.hidden=tryb!=='tez';
+  el.innerHTML=SEM?'<label><input type="checkbox" id="sem-wl" checked> wyszukiwanie po znaczeniu</label> – zadaj pytanie pełnym zdaniem, np. „Czy istnieje orzecznictwo dotyczące odpowiedzialności za szkodę, gdy związek przyczynowy jest pośredni?” <span class="sem-met">('+esc(SEM.model)+', indeks '+esc(SEM.metoda)+')</span>'
+    :'Tu działa wyszukiwanie po słowach. Pytania pełnym zdaniem (wyszukiwanie po znaczeniu) są dostępne, gdy stronę podaje serwer wyszukiwania.';
+  var c=document.getElementById('sem-wl'); if(c) c.onchange=lista; }
+function semSzukaj(q,el){
+  var nr=++semNr; document.getElementById('licznik').textContent='szukam tez najbliższych znaczeniowo…';
+  clearTimeout(semCzas); semCzas=setTimeout(function(){
+    fetch('api/szukaj?k=30&q='+encodeURIComponent(q)).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }).then(function(d){
+      if(nr!==semNr) return;  /* w międzyczasie wpisano inne zapytanie */
+      var w=d.wyniki.filter(function(x){ var t=TEZ[x.id]; return t && pasuje(ORZ[t.orzeczenie]) && (!filtrPrz || t.przepisy.indexOf(filtrPrz)>=0); });
+      var slabe=!w.length || w[0].sim<0.5;
+      el.innerHTML=(slabe?'<div class="pusto">W zbiorze nie ma tez wyraźnie odpowiadających na to pytanie'+(w.length?' – poniżej najbliższe znaczeniowo.':'.')+'</div>':'')+
+        w.map(function(x){ var t=TEZ[x.id], o=ORZ[t.orzeczenie], proc=Math.round(100*Math.max(0,x.sim));
+          return '<button class="teza-karta '+pwKlasa(t.id)+'" data-o="'+o.id+'" data-t="'+t.id+'"><div class="meta"><span class="sem-sim" title="podobieństwo znaczeniowe do pytania"><i style="width:'+proc+'%"></i></span> <b>'+x.sim.toFixed(2).replace('.',',')+'</b> · <span class="mono">'+esc(o.sygnatura)+'</span> · '+esc(o.sad||'')+(t.temat_llm?' · <span class="tem-llm">'+esc(t.temat_llm)+'</span>':'')+'</div>'+
+            esc(krotko(t.tekst,420))+'<div class="znacz">'+t.przepisy.map(function(p){return tagPrz(t,p);}).join('')+
+            (x.takze.length?'<span class="tag powt">ta sama teza także w: '+x.takze.map(function(y){return esc(y.sygnatura);}).join(', ')+'</span>':'')+'</div></button>'; }).join('');
+      document.getElementById('licznik').textContent=w.length+' tez najbliższych znaczeniowo pytaniu (od najbardziej podobnej)';
+      el.querySelectorAll('[data-o]').forEach(function(b){ b.onclick=function(){ location.hash='o-'+b.dataset.o+'--'+b.dataset.t; }; });
+    }).catch(function(){ if(nr!==semNr) return; SEM=null; semPasek(); lista(); });
+  },350);
+}
 function lista(){
   var q=document.getElementById('q').value.trim(), nq=bezOgonkow(q), el=document.getElementById('lista'), h='', n=0;
+  semNr++;  /* unieważnia wyszukiwanie znaczeniowe będące w drodze */
   if(tryb==='prz'){ szukajPrzepisu(q,el); return; }
+  if(tryb==='tez' && q && semWlaczone()){ semSzukaj(q,el); return; }
   if(tryb==='orz'){
     D.orzeczenia.filter(pasuje).forEach(function(o){
       if(nq && bezOgonkow([o.sygnatura,o.sad,o.typ,o.sentencja,o.faktyczne,o.prawne].join(' ')).indexOf(nq)<0) return; n++;
@@ -369,7 +403,7 @@ function lista(){
     });
     document.getElementById('licznik').textContent=n+' z '+D.tezy.length+' tez';
   }
-  el.innerHTML=h||'<div class="pusto">Brak wyników – zmień wyszukiwaną frazę lub filtry.</div>';
+  el.innerHTML=h||'<div class="pusto">Brak wyników – zmień wyszukiwaną frazę lub filtry.'+(tryb==='tez' && !SEM && q.split(/\s+/).length>3?' Wyszukiwanie po słowach wymaga, by wszystkie słowa wystąpiły w tezie – wpisz 1–3 słowa kluczowe; pytania pełnym zdaniem działają, gdy stronę podaje serwer wyszukiwania.':'')+'</div>';
   el.querySelectorAll('[data-o]').forEach(function(b){ b.onclick=function(){ location.hash='o-'+b.dataset.o+(b.dataset.t?'--'+b.dataset.t:''); };
     b.onkeydown=function(e){ if(e.key==='Enter' && e.target===b) b.onclick(); }; });
   el.querySelectorAll('.karta-graf').forEach(function(a){ a.onclick=function(e){ e.stopPropagation(); }; });
@@ -415,8 +449,9 @@ function szukajPrzepisu(q,el){
   el.querySelectorAll('.przepis-karta').forEach(function(b){ b.onclick=function(){ pokazPrzepis(b.dataset.art); }; });
 }
 function ustawTryb(t){ tryb=t; ['orz','tez','prz'].forEach(function(x){ document.getElementById('tryb-'+x).setAttribute('aria-pressed',t===x); });
-  document.getElementById('q').placeholder={orz:'Szukaj orzeczeń: sygnatura, sąd, słowa z treści…',tez:'Szukaj tez: np. „wstrzymanie wykonania kary”, „art. 448”…',prz:'Szukaj przepisu: „448 kc”, „art. 5 k.c.”, „kodeks karny wykonawczy” albo problem, np. „przeludnienie celi”'}[t];
-  przepisyChipy(); lista(); document.getElementById('q').focus(); }
+  document.getElementById('q').placeholder={orz:'Szukaj orzeczeń: sygnatura, sąd, słowa z treści…',tez:'Szukaj tez: pytanie pełnym zdaniem albo słowa, np. „wstrzymanie wykonania kary”, „art. 448”…',prz:'Szukaj przepisu: „448 kc”, „art. 5 k.c.”, „kodeks karny wykonawczy” albo problem, np. „przeludnienie celi”'}[t];
+  przepisyChipy(); semPasek(); lista(); document.getElementById('q').focus(); }
+if(window.fetch && /^https?:$/.test(location.protocol)) fetch('api/stan').then(function(r){ return r.ok?r.json():null; }).then(function(s){ if(s && s.ok){ SEM=s; semPasek(); if(tryb==='tez') lista(); } }).catch(function(){});
 document.getElementById('tryb-orz').onclick=function(){ustawTryb('orz');};
 document.getElementById('tryb-tez').onclick=function(){ustawTryb('tez');};
 document.getElementById('tryb-prz').onclick=function(){ustawTryb('prz');};

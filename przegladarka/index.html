@@ -358,7 +358,7 @@ var SEM=null, semCzas=null, semNr=0;
 function semWlaczone(){ var c=document.getElementById('sem-wl'); return !!SEM && (!c || c.checked); }
 function semPasek(){ var el=document.getElementById('sem-pasek'); if(!el) return; el.hidden=tryb!=='tez';
   el.innerHTML=SEM?'<label><input type="checkbox" id="sem-wl" checked> wyszukiwanie po znaczeniu</label> – zadaj pytanie pełnym zdaniem, np. „Czy istnieje orzecznictwo dotyczące odpowiedzialności za szkodę, gdy związek przyczynowy jest pośredni?” <span class="sem-met">('+esc(SEM.model)+', indeks '+esc(SEM.metoda)+')</span>'
-    :'Tu działa wyszukiwanie po słowach. Pytania pełnym zdaniem (wyszukiwanie po znaczeniu) są dostępne, gdy stronę podaje serwer wyszukiwania.';
+    :'Tu działa wyszukiwanie po słowach. Pytania pełnym zdaniem (wyszukiwanie po znaczeniu) są dostępne, gdy stronę podaje serwer wyszukiwania (w folderze projektu: ./uruchom_wyszukiwarke.sh).';
   var c=document.getElementById('sem-wl'); if(c) c.onchange=lista; }
 function semSzukaj(q,el){
   var nr=++semNr; document.getElementById('licznik').textContent='szukam tez najbliższych znaczeniowo…';

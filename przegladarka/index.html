@@ -285,6 +285,36 @@ dialog textarea,dialog input{padding:8px 10px; border:1px solid var(--line); bor
 .pod mark.wsp-all{background:var(--g4); color:inherit; border-radius:2px; padding:0 1px; font-weight:700}
 .leg-wsp{font-size:.74rem; color:var(--ink-dim); display:flex; align-items:center; gap:6px; flex-wrap:wrap}
 .leg-wsp i.grad{display:inline-block; width:90px; height:10px; border-radius:2px; background:linear-gradient(90deg,var(--g1),var(--g2),var(--g3),var(--g4))}
+
+/* podgląd tezy w orzeczeniu źródłowym */
+.link-btn{border:0; background:none; padding:0; color:var(--accent); cursor:pointer; font-size:.78rem; text-decoration:underline dotted; text-underline-offset:3px}
+dialog.podglad{width:min(1000px,calc(100vw - 32px)); height:calc(100vh - 48px); display:none; flex-direction:column; gap:6px}
+dialog.podglad[open]{display:flex}
+.pg-gora{display:flex; justify-content:space-between; gap:12px; align-items:flex-start}
+.pg-akcje{display:flex; gap:6px}
+.pg-akcje a.przycisk{text-decoration:none}
+.pg-info{margin:0; font-size:.84rem; color:var(--ink-dim)}
+.pg-dok{flex:1; overflow:auto; min-height:0}
+.dok mark.zrodlo-hl{background:var(--moja); box-shadow:0 0 0 2px var(--moja-line); padding:0}
+.k-teza[data-t]:hover{border-left-color:var(--accent)}
+
+/* listy powiązań (kroki jak po grafie) */
+.karta{cursor:pointer}
+.karta a.syg{color:var(--ink); text-decoration:none}
+.karta a.syg:hover{text-decoration:underline}
+a.odz{text-decoration:none; cursor:pointer}
+a.odz:hover{border-color:var(--ink-faint); filter:brightness(.96)}
+.odz b{font-weight:700}
+.odz.cy{background:var(--law-soft); color:var(--law); border-color:transparent}
+.odz.akc{background:var(--accent-soft); color:var(--accent); border-color:transparent}
+.rel-gl{display:flex; flex-direction:column; gap:4px; padding:8px 10px; background:var(--accent-soft); border-radius:8px}
+.rel-gl a.przycisk{align-self:flex-start; text-decoration:none; color:var(--ink)}
+.k-tem{margin:4px 0 0; font-size:.78rem; font-style:italic; color:var(--ink-dim)}
+.k-teza-pelna{margin:6px 0; font:15px/1.45 var(--f-tekst)}
+.k-teza-pelna mark.wsp{color:inherit; border-radius:2px; padding:0 1px}
+.k-teza-pelna mark.wsp-all{background:var(--g4); color:inherit; border-radius:2px; padding:0 1px; font-weight:700}
+i.grad{display:inline-block; width:70px; height:9px; border-radius:2px; vertical-align:middle; background:linear-gradient(90deg,var(--g1),var(--g2),var(--g3),var(--g4))}
+.karta.kt .link-btn{margin-top:4px}
 </style>
 
 <header class="top"><div class="wrap gora-pasek">
@@ -360,6 +390,14 @@ dialog textarea,dialog input{padding:8px 10px; border:1px solid var(--line); bor
     <label>Uzasadnienie (wymagane): dlaczego ten fragment jest tezą<textarea id="nt-kom" rows="3" required minlength="10" placeholder="np. formułuje ogólną regułę wykładni art. 448 k.c., niezależną od okoliczności sprawy"></textarea></label>
     <div class="akcje-okna"><button class="przycisk" value="anuluj" formnovalidate>Anuluj</button><button class="przycisk glowny" value="zapisz" id="nt-zapisz">Zapisz w zbiorze walidacyjnym</button></div>
   </form>
+</dialog>
+
+<!-- okno: podgląd tezy w jej orzeczeniu źródłowym (bez opuszczania bieżącego orzeczenia) -->
+<dialog id="podglad" class="podglad" aria-labelledby="pg-h">
+  <div class="pg-gora"><div><h2 id="pg-h"></h2><p class="maly" id="pg-meta"></p></div>
+    <div class="pg-akcje"><a class="przycisk glowny" id="pg-otworz" href="#">Otwórz to orzeczenie →</a><button class="przycisk" id="pg-zamknij" aria-label="Zamknij podgląd">✕</button></div></div>
+  <p class="pg-info" id="pg-info"></p>
+  <article class="dok pg-dok" id="pg-dok" lang="pl"></article>
 </dialog>
 
 <!-- okno: ocena tezy z obowiązkowym uzasadnieniem -->
@@ -547,7 +585,7 @@ var TRYBY={
   klaster:{ph:''},
   sytuacja:{ph:'Opisz stan faktyczny sprawy, np. „Osadzony przez kilka miesięcy przebywał w celi, w której na osobę przypadało mniej niż 3 m². Domaga się zadośćuczynienia od Skarbu Państwa.”', pod:true}
 };
-var S={tryb:'zapytanie', q:'', pod:'bm25', sort:'wynik', w:'', o:'', t:''};
+var S={tryb:'zapytanie', q:'', pod:'bm25', sort:'wynik', w:'', o:'', t:'', rel:''};
 var F={sad:'', typ:'', od:'', do:'', sedzia:'', haslo:'', zTezami:true};
 var WYNIKI=[], kluczWynikow=null, nrSzukania=0, LISTA_IDS=[];
 
@@ -558,7 +596,7 @@ function czytajAdres(){
 }
 function adres(zm){
   var s={}; Object.keys(S).forEach(function(k){ s[k]=S[k]; }); Object.keys(zm||{}).forEach(function(k){ s[k]=zm[k]; });
-  return '#'+['tryb','q','pod','sort','w','o','t'].filter(function(k){ return s[k] && !(k==='pod'&&s[k]==='bm25') && !(k==='sort'&&s[k]==='wynik'); })
+  return '#'+['tryb','q','pod','sort','w','rel','o','t'].filter(function(k){ return s[k] && !(k==='pod'&&s[k]==='bm25') && !(k==='sort'&&s[k]==='wynik'); })
     .map(function(k){ return k+'='+encodeURIComponent(s[k]); }).join('&');
 }
 function idz(zm,zastap){ var a=adres(zm); if(a===location.hash || (a==='#' && !location.hash)) { trasa(); return; } if(zastap) history.replaceState(null,'',a), trasa(); else location.hash=a; }
@@ -591,6 +629,14 @@ function filtryUI(){
   var ile=['sad','typ','od','do','sedzia','haslo'].filter(function(k){ return F[k]; }).length+(F.zTezami?0:1);
   document.getElementById('filtry-ile').textContent=ile||'';
 }
+/* klik w tezę na karcie: orzeczenie otwiera się od razu na tej tezie (podświetlonej w tekście) */
+document.getElementById('lista').addEventListener('click',function(e){
+  if(!e.target.closest) return;
+  if(S.rel && S.o) zLinku=true;            /* przejście z listy powiązań dopisuje się do ścieżki, jak krok po grafie */
+  if(e.target.closest('a,button')) return;
+  var p=e.target.closest('.k-teza[data-t]');
+  if(p){ e.preventDefault(); idz({o:TEZ[p.dataset.t].orzeczenie, t:p.dataset.t}); return; }
+  var k=e.target.closest('[data-href]'); if(k && !(window.getSelection&&String(window.getSelection()).length)) location.hash=k.dataset.href; });
 document.getElementById('filtry-btn').onclick=function(){ var b=document.getElementById('filtry'); b.hidden=!b.hidden; this.setAttribute('aria-expanded',String(!b.hidden)); };
 
 /* ---------- pasek: tryb, pole, podobieństwo ---------- */
@@ -609,11 +655,11 @@ function ustawPasek(){
   so.options[0].disabled=so.options[1].disabled=!(TRYBY[S.tryb].pod && S.q);
   if(so.options[so.selectedIndex].disabled) so.value='znaczenie';
 }
-document.querySelectorAll('[data-tryb]').forEach(function(b){ b.onclick=function(){ if(S.tryb!==b.dataset.tryb) idz({tryb:b.dataset.tryb, q:'', w:'', o:S.o, t:''}); }; });
+document.querySelectorAll('[data-tryb]').forEach(function(b){ b.onclick=function(){ if(S.tryb!==b.dataset.tryb||S.rel) idz({tryb:b.dataset.tryb, q:'', w:'', rel:'', o:S.o, t:''}); }; });
 document.getElementById('formularz').onsubmit=function(e){ e.preventDefault(); var v=(S.tryb==='sytuacja'?document.getElementById('q-opis'):document.getElementById('q')).value.trim();
-  if(S.tryb==='artykul'){ var ex=przepisyLista().filter(function(p){ return p.klucz===kluczArt(normArt(v)); })[0]; idz({q:v, w:ex?ex.art:''}); return; }
-  if(S.tryb==='temat'){ idz({q:v, w:v?'zawiera:'+v:''}); return; }
-  idz({q:v, w:''}); };
+  if(S.tryb==='artykul'){ var ex=przepisyLista().filter(function(p){ return p.klucz===kluczArt(normArt(v)); })[0]; idz({q:v, w:ex?ex.art:'', rel:''}); return; }
+  if(S.tryb==='temat'){ idz({q:v, w:v?'zawiera:'+v:'', rel:''}); return; }
+  idz({q:v, w:'', rel:''}); };
 document.getElementById('q').oninput=function(){ if(S.tryb==='artykul'||S.tryb==='temat'){ S.q=this.value; rysujWybor(); } };
 document.getElementById('podobienstwo').onchange=function(e){ idz({pod:e.target.value}); };
 document.getElementById('sortowanie').onchange=function(e){ idz({sort:e.target.value},true); };
@@ -642,7 +688,7 @@ function rysujWybor(){
       '<button class="klaster" data-w="poza" aria-pressed="'+(S.w==='poza')+'"><b>Poza skupiskami</b><span>'+poza+' '+odm(poza,'orzeczenie','orzeczenia','orzeczeń')+'</span><small>m.in. orzeczenia powołane, dalsze tematycznie</small></button></div>';
   }
   box.hidden=!h; box.innerHTML=h;
-  box.querySelectorAll('[data-w]').forEach(function(b){ b.onclick=function(){ idz({w:b.dataset.w, q:S.tryb==='klaster'?'':document.getElementById('q').value.trim()}); }; });
+  box.querySelectorAll('[data-w]').forEach(function(b){ b.onclick=function(){ idz({rel:'', w:b.dataset.w, q:S.tryb==='klaster'?'':document.getElementById('q').value.trim()}); }; });
 }
 
 /* ---------- lista orzeczeń ---------- */
@@ -681,8 +727,20 @@ function podswietl(txt,q){
   while((m=re.exec(txt))){ var w=bezOgonkow(m[0]); if(w.length>1 && qt.indexOf(w.length>6?w.slice(0,6):w)>=0){ out+=esc(txt.slice(p,m.index))+'<mark>'+esc(m[0])+'</mark>'; p=m.index+m[0].length; } }
   return out+esc(txt.slice(p));
 }
+/* karta orzeczenia na liście; odznaki prowadzą do list powiązań (jak przejście po grafie) */
+function kartaOrz(x,zap){
+  var o=x.o;
+  return '<li><div class="karta'+(S.o===o.id?' akt':'')+'" data-href="'+esc(adres({o:o.id, t:''}))+'">'+
+    '<div class="k-gora"><a class="syg" href="'+esc(adres({o:o.id, t:''}))+'">'+esc(o.sygnatura)+'</a>'+(x.rel!=null&&zap?'<span class="traf" title="trafność względem zapytania"><i style="width:'+Math.round(100*x.rel)+'%"></i></span>':'')+(x.etykieta?'<span class="odz">'+esc(x.etykieta)+'</span>':'')+'</div>'+
+    '<div class="k-meta">'+esc(typOrz(o))+' · '+esc(o.sad||'')+(o.data?' · '+data(o.data):'')+'</div>'+odznakiOrz(o,false)+
+    (S.tryb==='sytuacja'&&!S.rel&&o.stan_faktyczny?'<p class="k-fakty">'+podswietl(krotko(o.stan_faktyczny,260),S.q)+'</p>':'')+
+    tezyKarty(x).map(function(tid){ return '<p class="k-teza" data-t="'+tid+'" title="Otwórz orzeczenie na tej tezie">'+podswietl(krotko(TEZ[tid].tekst,230),S.tryb==='zapytanie'&&!S.rel?S.q:'')+'</p>'; }).join('')+
+    (x.trafione.length>2?'<p class="k-wiecej">+ '+(x.trafione.length-2)+' '+odm(x.trafione.length-2,'teza','tezy','tez')+'</p>':'')+
+    '</div></li>';
+}
 function rysujListe(){
   var el=document.getElementById('lista'), lic=document.getElementById('licznik');
+  if(S.rel){ rysujRelacje(); return; }
   if((S.tryb==='artykul'||S.tryb==='temat'||S.tryb==='klaster') && !S.w){ el.innerHTML=''; LISTA_IDS=[]; lic.textContent=S.tryb==='klaster'?'Wybierz skupisko powyżej.':S.tryb==='artykul'?'Wpisz artykuł albo wybierz go z listy powyżej.':'Wybierz temat z listy powyżej.'; return; }
   if(S.tryb==='sytuacja' && !S.q){ el.innerHTML=''; LISTA_IDS=[]; lic.textContent='Opisz stan faktyczny – wyszukiwarka znajdzie orzeczenia o podobnych faktach i pokaże ich tezy.'; return; }
   var w=posortowane(WYNIKI.filter(function(x){ return pasuje(x.o); })), zap=TRYBY[S.tryb].pod && S.q;
@@ -691,17 +749,7 @@ function rysujListe(){
   var ukryte=WYNIKI.length-w.length;
   lic.innerHTML='<b>'+w.length+'</b> '+odm(w.length,'orzeczenie','orzeczenia','orzeczeń')+(ukryte?' <span class="info">('+ukryte+' ukrytych przez filtry)</span>':'')+
     ' · <span class="info" title="Znaczenie orzeczenia: tezy powtórzone w innych orzeczeniach (każda ×2) + liczba orzeczeń w zbiorze, które je powołują">'+(zap&&S.sort==='wynik'?'kolejność: trafność + znaczenie orzeczenia':S.sort==='data'?'od najnowszych':zap&&S.sort==='trafnosc'?'kolejność: trafność':'kolejność: znaczenie orzeczenia')+' ⓘ</span>';
-  el.innerHTML=w.slice(0,200).map(function(x){ var o=x.o, n=o.tezy.length, pw=o.tezy_powtorzone||0, pl=(o.powolujace||[]).length;
-    return '<li><a class="karta'+(S.o===o.id?' akt':'')+'" href="'+esc(adres({o:o.id, t:''}))+'" data-o="'+o.id+'">'+
-      '<div class="k-gora"><span class="syg">'+esc(o.sygnatura)+'</span>'+(x.rel!=null&&zap?'<span class="traf" title="trafność względem zapytania"><i style="width:'+Math.round(100*x.rel)+'%"></i></span>':'')+'</div>'+
-      '<div class="k-meta">'+esc(typOrz(o))+' · '+esc(o.sad||'')+(o.data?' · '+data(o.data):'')+'</div>'+
-      '<div class="odznaki"><span class="odz" title="potwierdzone tezy w orzeczeniu">'+n+' '+odm(n,'teza','tezy','tez')+'</span>'+
-        (pw?'<span class="odz pw" title="tezy, które występują także w innych orzeczeniach">'+pw+' '+odm(pw,'powtórzona','powtórzone','powtórzonych')+' w innych</span>':'')+
-        (pl?'<span class="odz pl" title="orzeczenia z tego zbioru, które powołują to orzeczenie">powołuje '+pl+' '+odm(pl,'orzeczenie','orzeczenia','orzeczeń')+'</span>':'')+'</div>'+
-      (S.tryb==='sytuacja'&&o.stan_faktyczny?'<p class="k-fakty">'+podswietl(krotko(o.stan_faktyczny,260),S.q)+'</p>':'')+
-      tezyKarty(x).map(function(tid){ return '<p class="k-teza">'+podswietl(krotko(TEZ[tid].tekst,230),S.tryb==='zapytanie'?S.q:'')+'</p>'; }).join('')+
-      (x.trafione.length>2?'<p class="k-wiecej">+ '+(x.trafione.length-2)+' '+odm(x.trafione.length-2,'trafiona teza','trafione tezy','trafionych tez')+'</p>':'')+
-      '</a></li>'; }).join('')||'<li class="pusto">Brak orzeczeń'+(ukryte?' po zastosowaniu filtrów':'')+'.</li>';
+  el.innerHTML=w.slice(0,200).map(function(x){ return kartaOrz(x,zap); }).join('')||'<li class="pusto">Brak orzeczeń'+(ukryte?' po zastosowaniu filtrów':'')+'.</li>';
 }
 
 /* ---------- orzeczenie: metryka, tekst jak w oryginale z podświetlonymi tezami, tezy z oceną ---------- */
@@ -790,13 +838,14 @@ function podobneHTML(t){
   var p=(t.podobne||[]).filter(function(x){ return TEZ[x.t]; });
   if(!p.length) return '';
   var h=brzmienia([t.id].concat(p.map(function(x){ return x.t; })));
-  return '<details class="podobne"><summary>Podobne tezy w innych orzeczeniach ('+p.length+')</summary>'+
+  return '<details class="podobne"><summary>Podobne tezy w innych orzeczeniach ('+p.length+')</summary><a class="link-btn" href="'+esc(adres({rel:'podobne:'+t.id}))+'">wypisz podobne na liście wyników →</a>'+
     '<div class="leg-wsp">słowo wspólne: w 2 tezach <i class="grad"></i> we wszystkich (pogrubione) · bez koloru – tylko w jednej tezie</div>'+
     '<div class="pod ta"><div class="pod-gl"><b>Ta teza</b><span class="info">'+h[t.id].proc+'% słów wspólnych z podobnymi</span></div><p>'+h[t.id].html+'</p></div><ol>'+p.map(function(x){
     var z=TEZ[x.t], oz=ORZ[z.orzeczenie], ta=(x.s!=null&&x.s>=0.85)||x.p;
     return '<li class="pod"><div class="pod-gl">'+(x.s!=null?'<span class="pod-sim" title="podobieństwo znaczeniowe (kosinus embeddingów BGE-M3)"><i style="width:'+Math.round(100*Math.max(0,(x.s-0.6)/0.4))+'%"></i></span><b>'+x.s.toFixed(2).replace('.',',')+'</b>':'')+
       '<span class="odz '+(ta?'pw':'')+'">'+(ta?'ta sama teza':'podobna')+'</span>'+
-      '<a href="'+esc(adres({o:oz.id, t:z.id}))+'" title="Przejdź do tej tezy w jej orzeczeniu (powrót przyciskiem „Wróć”)">'+esc(oz.sygnatura)+'</a><span class="info">'+esc(oz.sad||'')+(oz.data?' · '+data(oz.data):'')+' · '+h[z.id].proc+'% słów wspólnych</span></div>'+
+      '<a href="'+esc(adres({o:oz.id, t:z.id}))+'" title="Przejdź do tej tezy w jej orzeczeniu (powrót przyciskiem „Wróć”)">'+esc(oz.sygnatura)+'</a><span class="info">'+esc(oz.sad||'')+(oz.data?' · '+data(oz.data):'')+' · '+h[z.id].proc+'% słów wspólnych</span>'+
+      '<button class="link-btn" data-podglad="'+oz.id+'|'+z.id+'" title="Podgląd tej tezy w treści jej orzeczenia, bez opuszczania bieżącego">⧉ zobacz w orzeczeniu</button></div>'+
       '<p>'+h[z.id].html+'</p>'+(z.przepisy.length?'<div class="tagi">'+z.przepisy.map(tagPrz).join('')+'</div>':'')+'</li>'; }).join('')+'</ol></details>';
 }
 function tezaHTML(o,tid,i){
@@ -805,9 +854,9 @@ function tezaHTML(o,tid,i){
       (t.temat_llm?'<span class="t-tem">'+esc(t.temat_llm)+'</span>':'')+'</div>'+
     '<p class="t-tekst">'+esc(t.tekst)+'</p>'+
     (t.przepisy.length?'<div class="tagi">'+t.przepisy.map(tagPrz).join('')+'</div>':'')+
-    (t.takze.length?'<p class="t-takze">Ta sama teza także w: '+t.takze.map(function(x){ var tz=ORZ[x].tezy.filter(function(y){ return TEZ[y].takze.indexOf(o.id)>=0; })[0]; return '<a href="'+esc(adres({o:x, t:tz||''}))+'">'+esc(ORZ[x].sygnatura)+'</a>'; }).join(', ')+'</p>':'')+
+    (t.takze.length?'<p class="t-takze"><a class="odz pw" href="'+esc(adres({rel:'takze:'+tid}))+'" title="Wypisz na liście tę tezę we wszystkich orzeczeniach">ta sama teza w '+t.takze.length+' '+odm(t.takze.length,'innym orzeczeniu','innych orzeczeniach','innych orzeczeniach')+' →</a> '+t.takze.map(function(x){ var tz=ORZ[x].tezy.filter(function(y){ return TEZ[y].takze.indexOf(o.id)>=0; })[0]; return '<a href="'+esc(adres({o:x, t:tz||''}))+'">'+esc(ORZ[x].sygnatura)+'</a>'; }).join(', ')+'</p>':'')+
     podobneHTML(t)+
-    (t.zrodlowe&&t.zrodlowe.length?'<p class="t-takze">Teza powołuje: '+t.zrodlowe.map(function(z){ return ORZ[z]?linkOrz(z):esc(z); }).join(', ')+'</p>':'')+
+    zrodloweHTML(t)+
     (k?'<details class="dlaczego"><summary>Dlaczego to teza?</summary><p>'+(k.walidator?esc(k.walidator):'<span class="info">Brak uzasadnienia walidatora.</span>')+'</p>'+wektorHTML(k.wektor)+'</details>':'')+
     '<div class="ocena" role="group" aria-label="Twoja ocena tezy"><button data-ocen="teza" aria-pressed="'+(!!oc&&oc.decyzja==='teza')+'">✓ Trafna teza</button><button data-ocen="nie_teza" aria-pressed="'+(!!oc&&oc.decyzja==='nie_teza')+'">✗ Nie jest tezą</button>'+
       (oc?'<button data-kom title="Zmień ocenę lub uzasadnienie">✎ edytuj</button>':'')+'</div>'+(oc&&oc.uzasadnienie?'<p class="oc-uz"><b>Twoje uzasadnienie:</b> '+esc(oc.uzasadnienie)+'</p>':'')+'</li>';
@@ -855,13 +904,14 @@ function pokazOrz(id,tid){
   var el=document.getElementById('orzeczenie'), o=ORZ[id];
   document.querySelector('.uklad').classList.toggle('z-orz',!!o);
   if(!o){ el.innerHTML='<div class="pusto-duze">Wybierz orzeczenie z listy, aby zobaczyć jego treść, metrykę i tezy.</div>'; el.dataset.o=''; SCIEZKA=[]; return; }
+  if(el.dataset.o===id) zLinku=false;
   if(el.dataset.o!==id){
     var pw=o.tezy_powtorzone||0, pl=(o.powolujace||[]).length;
     aktualizujSciezke(id); AKT_T='';
     el.innerHTML='<div class="orz-nawig" id="orz-nawig"></div><button class="przycisk wstecz" id="do-listy">← Wyniki</button>'+
       '<header class="orz-gl"><h2>'+esc(o.sygnatura)+'</h2><p class="orz-meta">'+esc(typOrz(o))+' · '+esc(o.sad||'')+(o.data?' · '+data(o.data):'')+'</p>'+
         (o.temat_llm?'<p class="orz-tem">'+esc(o.temat_llm)+'</p>':'')+
-        '<div class="odznaki"><span class="odz">'+o.tezy.length+' '+odm(o.tezy.length,'teza','tezy','tez')+'</span>'+(pw?'<span class="odz pw">'+pw+' '+odm(pw,'powtórzona','powtórzone','powtórzonych')+' w innych orzeczeniach</span>':'')+(pl?'<span class="odz pl">powołuje je '+pl+' '+odm(pl,'orzeczenie','orzeczenia','orzeczeń')+' ze zbioru</span>':'')+'</div></header>'+
+        odznakiOrz(o,true)+'</header>'+
       '<details class="metryka-box" open><summary>Metryka orzeczenia</summary>'+metryka(o)+'</details>'+
       (o.stan_faktyczny?'<details class="stan"><summary>Stan faktyczny w skrócie <span class="info">(streszczenie wygenerowane przez model)</span></summary><p>'+esc(o.stan_faktyczny)+'</p></details>':'')+
       '<div class="orz-uklad"><div class="dok-kol"><p class="dok-info" id="dok-info"></p><article class="dok" id="dok" lang="pl"></article></div><aside class="tezy-kol" id="tezy-kol"></aside></div>';
@@ -987,6 +1037,50 @@ document.getElementById('oc-form').onsubmit=function(e){
   komunikat(akcja==='usun'?'Ocena cofnięta.':'Ocena zapisana w zbiorze walidacyjnym.');
 };
 
+/* ---------- orzeczenia powołane w tezie (źródłowe) i podgląd tezy w orzeczeniu ---------- */
+var PO_SYG={}, SAOS_SYG={};
+D.orzeczenia.forEach(function(o){ PO_SYG[kluczArt(o.sygnatura)]=PO_SYG[kluczArt(o.sygnatura)]||o.id;
+  (o.cytuje||[]).forEach(function(c){ if(c.syg && c.ids.length) SAOS_SYG[kluczArt(c.syg)]=c.ids[0]; }); });
+function zrodloweHTML(t){
+  if(!t.zrodlowe||!t.zrodlowe.length) return '';
+  return '<p class="t-takze zr">Teza powołuje: '+t.zrodlowe.map(function(z){
+    var oid=ORZ[z]?z:PO_SYG[kluczArt(z)], syg=ORZ[z]?ORZ[z].sygnatura:z;
+    if(oid) return '<a href="'+esc(adres({o:oid, t:''}))+'">'+esc(syg)+'</a> <button class="link-btn" data-podglad="'+oid+'||'+t.id+'" title="Podgląd orzeczenia źródłowego z miejscem, z którego pochodzi teza">⧉ zobacz w orzeczeniu</button>';
+    var sid=SAOS_SYG[kluczArt(syg)];
+    return sid?'<a href="https://www.saos.org.pl/judgments/'+sid+'" target="_blank" rel="noopener" title="Orzeczenie spoza zbioru – otwiera SAOS">'+esc(syg)+' ↗</a>':'<span title="Orzeczenia nie ma w zbiorze ani w SAOS">'+esc(syg)+'</span>'; }).join(', ')+'</p>';
+}
+/* podgląd: pełny tekst orzeczenia oid z podświetlonymi tezami; wyróżniona teza cel (gdy znana), a dla orzeczenia
+   powołanego w tezie zr -- miejsce, w którym występuje jej brzmienie, albo najbardziej podobna teza tego orzeczenia */
+function podglad(oid,cel,zr){
+  var o=ORZ[oid]; if(!o) return;
+  var dok=document.getElementById('pg-dok'), info='';
+  document.getElementById('pg-h').textContent=o.sygnatura;
+  document.getElementById('pg-meta').textContent=typOrz(o)+' · '+(o.sad||'')+(o.data?' · '+data(o.data):'')+' · '+o.tezy.length+' '+odm(o.tezy.length,'teza','tezy','tez');
+  document.getElementById('pg-otworz').setAttribute('href',adres({o:oid, t:cel||''}));
+  dok.innerHTML=o.html||'<p class="info">Brak tekstu orzeczenia.</p>';
+  podswietlTezy(dok,o);
+  var cele=[];
+  if(zr && TEZ[zr]){
+    var mapa=mapaTekstu(dok), z=znajdz(mapa,TEZ[zr].tekst);
+    if(z){ owin(mapa,z[0],z[1],'zrodlo-hl','zr','◆'); cele=dok.querySelectorAll('mark.zrodlo-hl'); info='Wyróżnione na niebiesko: miejsce, w którym orzeczenie źródłowe zawiera brzmienie tezy z '+ORZ[TEZ[zr].orzeczenie].sygnatura+'.'; }
+    else { var p=(TEZ[zr].podobne||[]).filter(function(x){ return TEZ[x.t].orzeczenie===oid; })[0];
+      if(p){ cel=p.t; info='Brzmienia tezy nie ma dosłownie w tym orzeczeniu – wyróżniona najbardziej podobna teza tego orzeczenia (podobieństwo '+(p.s!=null?p.s.toFixed(2).replace('.',','):'wg pipeline’u')+').'; }
+      else info='Brzmienia tezy nie odnaleziono w tym orzeczeniu ani podobnej tezy – przejrzyj tekst.'; }
+  }
+  if(cel && !cele.length){ cele=dok.querySelectorAll('mark[data-t="'+cel+'"]'); [].forEach.call(cele,function(m){ m.classList.add('akt'); });
+    var nr=o.tezy.indexOf(cel)+1;
+    if(!info) info=cele.length?'Wyróżniona teza '+nr+' tego orzeczenia.':'Tej tezy nie udało się odnaleźć w tekście (model sparafrazował fragment): '+krotko(TEZ[cel].tekst,200); }
+  document.getElementById('pg-info').textContent=info||'Podświetlone fragmenty to tezy tego orzeczenia.';
+  var d=document.getElementById('podglad'); if(d.showModal) d.showModal(); else d.setAttribute('open','');
+  dok.scrollTop=0;
+  if(cele.length) setTimeout(function(){ cele[0].scrollIntoView({block:'center'}); },30);
+}
+document.addEventListener('click',function(e){ var b=e.target.closest&&e.target.closest('[data-podglad]'); if(!b) return;
+  e.preventDefault(); var x=b.dataset.podglad.split('|'); podglad(x[0],x[1],x[2]); });
+document.getElementById('pg-zamknij').onclick=function(){ zamknijDlg('podglad'); };
+document.getElementById('pg-otworz').addEventListener('click',function(){ zLinku=!!S.o; zamknijDlg('podglad'); });
+document.getElementById('podglad').addEventListener('click',function(e){ if(e.target===this) zamknijDlg('podglad'); });  /* klik w tło zamyka */
+
 /* ---------- zbiór walidacyjny: oceny tez i tezy oznaczone ręcznie ----------
    Zapis w pamięci tej przeglądarki (localStorage); eksport do pliku JSON/CSV i import z pliku JSON.
    Wpis „ocena”: {rodzaj, teza, orzeczenie, sygnatura, tekst, decyzja: teza|nie_teza, uzasadnienie (wymagane), autor, data}
@@ -1105,6 +1199,81 @@ function pokazPrzepis(art){
   window.scrollTo(0,0);
 }
 
+/* ---------- powiązania: listy jak kroki po grafie (#rel=rodzaj:id) ----------
+   tezy:<orz>    wszystkie tezy orzeczenia
+   powt:<orz>    orzeczenia, w których powtarzają się tezy tego orzeczenia (z tymi tezami)
+   powol:<orz>   orzeczenia ze zbioru, które powołują to orzeczenie
+   cyt:<orz>     orzeczenia ze zbioru powołane w tym orzeczeniu
+   takze:<teza>  ta sama teza we wszystkich orzeczeniach
+   podobne:<teza> teza i tezy do niej podobne (embeddingi)
+   Każda odznaka na karcie, w nagłówku orzeczenia i przy tezie prowadzi do kolejnej listy, a otwarcie orzeczenia
+   z listy powiązań dopisuje się do ścieżki – można chodzić po powiązaniach jak po grafie i wracać. */
+function odz(rel,kl,tekst,tytul){ return '<a class="odz '+kl+'" href="'+esc(adres({rel:rel}))+'" title="'+esc(tytul)+'">'+tekst+'</a>'; }
+function cytowane(o){
+  var s={};
+  (o.cytuje||[]).forEach(function(c){ c.ids.forEach(function(i){ var x=SAOSID[String(i)]; if(x && x!==o.id) s[x]=1; }); });
+  o.tezy.forEach(function(tid){ (TEZ[tid].zrodlowe||[]).forEach(function(z){ var x=ORZ[z]?z:PO_SYG[kluczArt(z)]; if(x && x!==o.id) s[x]=1; }); });
+  return Object.keys(s);
+}
+function odznakiOrz(o,pelne){
+  var n=o.tezy.length, pw=o.tezy_powtorzone||0, pl=(o.powolujace||[]).length, cy=pelne?cytowane(o).length:0;
+  return '<div class="odznaki">'+(n?odz('tezy:'+o.id,'','<b>'+n+'</b> '+odm(n,'teza','tezy','tez'),'Wypisz wszystkie tezy tego orzeczenia'):'<span class="odz">0 tez</span>')+
+    (pw?odz('powt:'+o.id,'pw','<b>'+pw+'</b> '+odm(pw,'powtórzona','powtórzone','powtórzonych')+' w innych','Wypisz orzeczenia, w których powtarzają się tezy tego orzeczenia'):'')+
+    (pl?odz('powol:'+o.id,'pl','powołuje je <b>'+pl+'</b>','Wypisz orzeczenia ze zbioru, które powołują to orzeczenie'):'')+
+    (cy?odz('cyt:'+o.id,'cy','powołuje <b>'+cy+'</b> ze zbioru','Wypisz orzeczenia ze zbioru powołane w tym orzeczeniu'):'')+'</div>';
+}
+function odznakiTezy(t){
+  var p=(t.podobne||[]).length;
+  return '<div class="odznaki">'+(t.takze.length?odz('takze:'+t.id,'pw','ta sama teza w <b>'+t.takze.length+'</b> '+odm(t.takze.length,'innym','innych','innych'),'Wypisz tę tezę we wszystkich orzeczeniach'):'')+
+    (p?odz('podobne:'+t.id,'','<b>'+p+'</b> '+odm(p,'podobna','podobne','podobnych'),'Wypisz tezy podobne znaczeniowo'):'')+'</div>';
+}
+function powoluje(t,oid){ return (t.zrodlowe||[]).some(function(z){ return z===oid || PO_SYG[kluczArt(z)]===oid; }); }
+function relacja(r){
+  var i=r.indexOf(':'), typ=r.slice(0,i), id=r.slice(i+1), o=ORZ[id], t=TEZ[id];
+  function orzLista(ids,traf){ return ids.filter(function(x){ return ORZ[x]; }).map(function(x){ return {o:ORZ[x], rel:null, trafione:traf?traf(x):[]}; })
+    .sort(function(a,b){ return znaczenie(b.o)-znaczenie(a.o) || String(b.o.data||'').localeCompare(String(a.o.data||'')); }); }
+  if(typ==='tezy'&&o) return {tytul:'Wszystkie tezy orzeczenia '+o.sygnatura, rodzaj:'tezy', tezy:o.tezy.map(function(x){ return {t:x}; })};
+  if(typ==='powt'&&o){ var s={}; o.tezy.forEach(function(x){ TEZ[x].takze.forEach(function(y){ s[y]=1; }); });
+    return {tytul:'Orzeczenia, w których powtarzają się tezy z '+o.sygnatura, rodzaj:'orz', orz:orzLista(Object.keys(s),function(x){ return ORZ[x].tezy.filter(function(u){ return TEZ[u].takze.indexOf(o.id)>=0; }); })}; }
+  if(typ==='powol'&&o) return {tytul:'Orzeczenia ze zbioru, które powołują '+o.sygnatura, rodzaj:'orz', orz:orzLista(o.powolujace||[],function(x){ return ORZ[x].tezy.filter(function(u){ return powoluje(TEZ[u],o.id); }); })};
+  if(typ==='cyt'&&o) return {tytul:'Orzeczenia ze zbioru powołane w '+o.sygnatura, rodzaj:'orz', orz:orzLista(cytowane(o))};
+  if(typ==='takze'&&t){ var w=[{t:t.id, et:'ta teza'}], pod={}; (t.podobne||[]).forEach(function(x){ pod[x.t]=x; });
+    t.takze.forEach(function(x){ var u=ORZ[x].tezy.filter(function(y){ return TEZ[y].takze.indexOf(t.orzeczenie)>=0; });
+      var bliskie=u.filter(function(y){ return pod[y]; }); (bliskie.length?bliskie:u).forEach(function(y){ w.push({t:y, s:pod[y]&&pod[y].s}); }); });
+    return {tytul:'Ta sama teza w '+(t.takze.length+1)+' orzeczeniach', rodzaj:'tezy', tezy:w, porownaj:true}; }
+  if(typ==='podobne'&&t) return {tytul:'Tezy podobne do tezy z '+ORZ[t.orzeczenie].sygnatura, rodzaj:'tezy', porownaj:true,
+    tezy:[{t:t.id, et:'ta teza'}].concat((t.podobne||[]).filter(function(x){ return TEZ[x.t]; }).map(function(x){ return {t:x.t, s:x.s, p:x.p}; }))};
+  return null;
+}
+function kartaTezy(x,brz){
+  var t=TEZ[x.t], o=ORZ[t.orzeczenie], nr=o.tezy.indexOf(t.id)+1, ta=x.s!=null&&x.s>=0.85||x.p;
+  return '<li><div class="karta kt'+(S.o===o.id&&S.t===t.id?' akt':'')+'" data-href="'+esc(adres({o:o.id, t:t.id}))+'">'+
+    '<div class="k-gora"><a class="syg" href="'+esc(adres({o:o.id, t:t.id}))+'">'+esc(o.sygnatura)+'</a><span class="info">teza '+nr+'</span>'+
+      (x.et?'<span class="odz akc">'+esc(x.et)+'</span>':x.s!=null?'<span class="pod-sim" title="podobieństwo znaczeniowe"><i style="width:'+Math.round(100*Math.max(0,(x.s-0.6)/0.4))+'%"></i></span><b class="info">'+x.s.toFixed(2).replace('.',',')+'</b>'+(ta?'<span class="odz pw">ta sama</span>':''):'')+'</div>'+
+    '<div class="k-meta">'+esc(typOrz(o))+' · '+esc(o.sad||'')+(o.data?' · '+data(o.data):'')+'</div>'+
+    (t.temat_llm?'<p class="k-tem">'+esc(t.temat_llm)+'</p>':'')+
+    '<p class="k-teza-pelna">'+(brz?brz[t.id].html:esc(krotko(t.tekst,400)))+'</p>'+
+    (t.przepisy.length?'<div class="tagi">'+t.przepisy.map(tagPrz).join('')+'</div>':'')+odznakiTezy(t)+
+    '<button class="link-btn" data-podglad="'+o.id+'|'+t.id+'">⧉ zobacz w orzeczeniu</button></div></li>';
+}
+function rysujRelacje(){
+  var el=document.getElementById('lista'), lic=document.getElementById('licznik'), r=relacja(S.rel);
+  var wroc='<a class="przycisk maly" href="'+esc(adres({rel:''}))+'">← wyniki wyszukiwania</a>';
+  if(!r){ LISTA_IDS=[]; lic.innerHTML=wroc+' Nieznane powiązanie.'; el.innerHTML=''; return; }
+  var n=r.rodzaj==='tezy'?r.tezy.length:r.orz.length;
+  lic.innerHTML='<div class="rel-gl">'+wroc+'<b>'+esc(r.tytul)+'</b><span class="info">'+n+' '+(r.rodzaj==='tezy'?odm(n,'teza','tezy','tez'):odm(n,'orzeczenie','orzeczenia','orzeczeń'))+
+    (r.porownaj?' · słowa wspólne podświetlone (w 2 tezach <i class="grad"></i> we wszystkich)':'')+' · kliknięcie odznaki – kolejne powiązania</span></div>';
+  if(r.rodzaj==='tezy'){
+    var brz=r.porownaj&&r.tezy.length>1?brzmienia(r.tezy.map(function(x){ return x.t; })):null;
+    LISTA_IDS=r.tezy.map(function(x){ return TEZ[x.t].orzeczenie; }).filter(function(x,i,a){ return a.indexOf(x)===i; });
+    el.innerHTML=r.tezy.map(function(x){ return kartaTezy(x,brz); }).join('');
+  } else {
+    LISTA_IDS=r.orz.map(function(x){ return x.o.id; });
+    el.innerHTML=r.orz.map(function(x){ return kartaOrz(x,false); }).join('')||'<li class="pusto">Brak.</li>';
+  }
+  var nw=document.getElementById('orz-nawig'); if(nw && S.o) nw.innerHTML=sciezkaHTML()+wynikiHTML(S.o);
+}
+
 /* ---------- nawigacja: adres strony -> stan, wyszukiwanie, lista, orzeczenie ---------- */
 var TYTUL=document.title;
 function trasa(){
@@ -1112,13 +1281,13 @@ function trasa(){
   document.getElementById('zazn-pop').hidden=true;
   if(p.przepis){ gl.hidden=true; pr.hidden=false; pokazPrzepis(p.przepis); return; }
   gl.hidden=false; pr.hidden=true; document.title=TYTUL;
-  S={tryb:TRYBY[p.tryb]?p.tryb:'zapytanie', q:p.q||'', pod:p.pod||'bm25', sort:p.sort||'wynik', w:p.w||'', o:ORZ[p.o]?p.o:'', t:TEZ[p.t]?p.t:''};
+  S={tryb:TRYBY[p.tryb]?p.tryb:'zapytanie', q:p.q||'', pod:p.pod||'bm25', sort:p.sort||'wynik', w:p.w||'', o:ORZ[p.o]?p.o:'', t:TEZ[p.t]?p.t:'', rel:p.rel||''};
   if(S.tryb==='artykul' && S.w && !S.q) S.q=S.w;
   ustawPasek(); rysujWybor();
   szukajWynikow().then(function(w){ if(w) rysujListe(); });
   pokazOrz(S.o,S.t);
 }
-document.getElementById('brand').onclick=function(e){ e.preventDefault(); idz({tryb:'zapytanie', q:'', w:'', o:'', t:''}); };
+document.getElementById('brand').onclick=function(e){ e.preventDefault(); idz({tryb:'zapytanie', q:'', w:'', o:'', t:'', rel:''}); };
 window.addEventListener('hashchange',trasa);
 filtryUI();
 wykryjSerwer(function(){ if(SERWER) document.getElementById('podtytul').textContent+=' · wyszukiwanie znaczeniowe włączone'; kluczWynikow=null; trasa(); });

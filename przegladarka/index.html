@@ -1,7 +1,9 @@
 <title>Wyszukiwarka orzeczeń z tezami</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400&display=swap">
 <style>
 :root{
+  --f-ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --f-tekst:'Times New Roman',Times,Tinos,'Liberation Serif',serif;
   --bg:#f3f2ee; --surface:#ffffff; --surface-2:#f7f6f2; --ink:#16191c; --ink-dim:#555a5e; --ink-faint:#868a8d;
   --line:#dcdad2; --accent:#7a4e12; --accent-soft:#f6ecdc; --focus:#2a6fd0;
   --hl:#fde9a9; --hl-akt:#f5c443; --hl-pw:#fbd2b8; --moja:#d8ecff; --moja-line:#2a6fd0;
@@ -33,9 +35,9 @@
   --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 24px -16px rgba(0,0,0,.6); }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 'IBM Plex Sans',system-ui,sans-serif; padding:0 16px 40px}
+body{margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 var(--f-ui); padding:0 16px 40px}
 .wrap{max-width:1440px; margin:0 auto}
-h1,h2,h3{font-family:'Source Serif 4',Georgia,serif; font-weight:600; margin:0}
+h1,h2,h3{font-family:var(--f-tekst); font-weight:700; margin:0}
 button,input,select,textarea{font:inherit; color:inherit}
 :focus-visible{outline:2px solid var(--focus); outline-offset:2px}
 a{color:var(--accent)}
@@ -46,7 +48,7 @@ code{font-size:.85em; background:var(--surface-2); padding:1px 4px; border-radiu
 .top{position:sticky; top:0; z-index:20; background:var(--bg); border-bottom:1px solid var(--line); padding:10px 0; margin-bottom:14px}
 .gora-pasek{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
 .brand{text-decoration:none; color:var(--ink); display:flex; flex-direction:column}
-.brand b{font:600 1.25rem 'Source Serif 4',Georgia,serif}
+.brand b{font:700 1.3rem var(--f-tekst)}
 .brand span{font-size:.76rem; color:var(--ink-dim)}
 .przycisk{border:1px solid var(--line); background:var(--surface); border-radius:8px; padding:7px 12px; cursor:pointer; font-size:.86rem; display:inline-flex; gap:6px; align-items:center}
 .przycisk:hover{border-color:var(--ink-faint)}
@@ -98,7 +100,7 @@ code{font-size:.85em; background:var(--surface-2); padding:1px 4px; border-radiu
 .karta:hover{border-color:var(--ink-faint)}
 .karta.akt{border-color:var(--accent); box-shadow:inset 3px 0 0 var(--accent)}
 .k-gora{display:flex; justify-content:space-between; gap:8px; align-items:center}
-.syg{font:600 1.02rem 'Source Serif 4',Georgia,serif}
+.syg{font:700 1.08rem var(--f-tekst)}
 .traf{width:56px; height:6px; border-radius:3px; background:var(--surface-2); border:1px solid var(--line); overflow:hidden; flex:0 0 auto}
 .traf i{display:block; height:100%; background:var(--accent)}
 .k-meta{font-size:.78rem; color:var(--ink-dim)}
@@ -127,7 +129,7 @@ details>summary{cursor:pointer; font-weight:600; font-size:.9rem; padding:6px 0}
 .metryka{display:grid; grid-template-columns:minmax(120px,190px) 1fr; gap:4px 14px; margin:6px 0; font-size:.86rem}
 .metryka dt{color:var(--ink-dim)}
 .metryka dd{margin:0}
-.metryka q{font-family:'Source Serif 4',Georgia,serif}
+.metryka q{font-family:var(--f-tekst)}
 .metryka-wiecej{margin-top:4px}
 .metryka-wiecej>summary{font-weight:500; color:var(--accent); font-size:.84rem}
 .tag{display:inline-block; font-size:.74rem; padding:1px 8px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line); color:var(--ink-dim); text-decoration:none; margin:1px 0}
@@ -136,7 +138,7 @@ details>summary{cursor:pointer; font-weight:600; font-size:.9rem; padding:6px 0}
 .tag.biezacy{outline:1.5px solid var(--law)}
 .orz-uklad{display:grid; grid-template-columns:minmax(0,1fr) minmax(280px,380px); gap:16px; margin-top:14px; border-top:1px solid var(--line); padding-top:14px}
 .dok-info{font-size:.78rem; color:var(--ink-dim); margin:0 0 8px}
-.dok{background:var(--paper); color:var(--paper-ink); border:1px solid var(--line); border-radius:6px; padding:28px 34px; font:16px/1.65 'Source Serif 4',Georgia,serif; overflow-wrap:break-word}
+.dok{background:var(--paper); color:var(--paper-ink); border:1px solid var(--line); border-radius:6px; padding:28px 34px; font:17px/1.6 var(--f-tekst); overflow-wrap:break-word}
 .dok h2{font-size:1.25rem; text-align:center; margin:10px 0 4px; letter-spacing:.06em}
 .dok h5,.dok h4{font-size:.95rem; text-align:center; margin:2px 0 12px; font-weight:600}
 .dok h3.czesc{font-size:1.05rem; margin:18px 0 8px}
@@ -156,7 +158,7 @@ details>summary{cursor:pointer; font-weight:600; font-size:.9rem; padding:6px 0}
 .dok mark.teza-hl.pw{background:var(--hl-pw)}
 .dok mark.teza-hl.moja{background:var(--moja); box-shadow:0 1px 0 var(--moja-line)}
 .dok mark.akt{background:var(--hl-akt)}
-.dok sup.nr{font:600 .66rem 'IBM Plex Sans',sans-serif; color:var(--accent); margin-right:2px}
+.dok sup.nr{font:600 .66rem var(--f-ui); color:var(--accent); margin-right:2px}
 .leg{display:flex; flex-wrap:wrap; gap:10px; font-size:.74rem; color:var(--ink-dim); margin:0 0 8px}
 .tezy-kol{position:sticky; top:72px; max-height:calc(100vh - 86px); overflow:auto}
 .t-h{font-size:1.05rem; margin:0 0 8px}
@@ -169,7 +171,7 @@ details>summary{cursor:pointer; font-weight:600; font-size:.9rem; padding:6px 0}
 .t-gora{display:flex; gap:8px; align-items:baseline; flex-wrap:wrap}
 .t-nr{border:0; background:none; padding:0; font-weight:600; color:var(--accent); cursor:pointer; font-size:.82rem}
 .t-tem{font-size:.78rem; color:var(--ink-dim); font-style:italic}
-.t-tekst{margin:4px 0 6px; font:15px/1.5 'Source Serif 4',Georgia,serif}
+.t-tekst{margin:4px 0 6px; font:16px/1.45 var(--f-tekst)}
 .tagi{display:flex; flex-wrap:wrap; gap:4px}
 .t-takze{margin:6px 0 0; font-size:.78rem; color:var(--pw)}
 .t-takze a{color:inherit}
@@ -195,7 +197,7 @@ dialog::backdrop{background:rgba(10,10,10,.4)}
 dialog h2{font-size:1.25rem; margin-bottom:6px}
 dialog label{display:flex; flex-direction:column; gap:4px; font-size:.84rem; color:var(--ink-dim); margin:10px 0}
 dialog label.przycisk{display:inline-flex; flex-direction:row; margin:0; color:var(--ink)}
-dialog textarea,dialog input{padding:8px 10px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font:15px/1.45 'Source Serif 4',Georgia,serif}
+dialog textarea,dialog input{padding:8px 10px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font:15px/1.45 var(--f-tekst)}
 .maly{font-size:.82rem; color:var(--ink-dim); margin:0 0 6px}
 .akcje-okna{display:flex; justify-content:flex-end; gap:8px; margin-top:8px}
 .wal-gora{display:flex; justify-content:space-between; align-items:center}
@@ -212,7 +214,7 @@ dialog textarea,dialog input{padding:8px 10px; border:1px solid var(--line); bor
 #przepis{max-width:980px}
 .art-gl h1{font-size:2rem; margin-top:4px}
 .art-box{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:14px 18px; margin:14px 0}
-.art-tekst{font:16px/1.6 'Source Serif 4',Georgia,serif; white-space:pre-line}
+.art-tekst{font:16px/1.6 var(--f-tekst); white-space:pre-line}
 .art-tekst.uchyl{text-decoration:line-through; color:var(--ink-dim)}
 .art-lista{list-style:none; padding:0; margin:0; display:grid; gap:10px}
 .art-orz{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:12px 16px}
@@ -220,7 +222,7 @@ dialog textarea,dialog input{padding:8px 10px; border:1px solid var(--line); bor
 .art-orz-gl .syg{text-decoration:none}
 .art-orz-gl .odznaki{margin:0}
 .art-teza{border-top:1px solid var(--line); margin-top:8px; padding-top:8px}
-.art-teza p{margin:0 0 4px; font:15px/1.5 'Source Serif 4',Georgia,serif}
+.art-teza p{margin:0 0 4px; font:15px/1.5 var(--f-tekst)}
 .do-tezy{font-size:.8rem; display:inline-block; margin-top:4px}
 
 @media (max-width:1150px){ .orz-uklad{grid-template-columns:1fr} .tezy-kol{position:static; max-height:none} }

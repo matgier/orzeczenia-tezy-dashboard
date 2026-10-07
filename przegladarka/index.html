@@ -160,7 +160,7 @@ details>summary{cursor:pointer; font-weight:600; font-size:.9rem; padding:6px 0}
 .dok mark.akt{background:var(--hl-akt)}
 .dok sup.nr{font:600 .66rem var(--f-ui); color:var(--accent); margin-right:2px}
 .leg{display:flex; flex-wrap:wrap; gap:10px; font-size:.74rem; color:var(--ink-dim); margin:0 0 8px}
-.tezy-kol{position:sticky; top:72px; max-height:calc(100vh - 86px); overflow:auto}
+.tezy-kol{position:sticky; top:120px; max-height:calc(100vh - 134px); overflow:auto}
 .t-h{font-size:1.05rem; margin:0 0 8px}
 .tezy{list-style:none; margin:0 0 14px; padding:0; display:grid; gap:8px}
 .teza{border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:var(--surface)}
@@ -236,6 +236,35 @@ dialog textarea,dialog input{padding:8px 10px; border:1px solid var(--line); bor
   .metryka{grid-template-columns:1fr} .metryka dt{font-weight:600; margin-top:4px}
   .pole{flex-direction:column; align-items:stretch}
 }
+
+/* nawigacja w orzeczeniu: ścieżka przejść, poprzednie/następne w wynikach, przegląd tez */
+.orz-nawig{position:sticky; top:62px; z-index:5; background:var(--surface); margin:-16px -18px 10px; padding:8px 18px; border-bottom:1px solid var(--line); border-radius:var(--r) var(--r) 0 0; display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; justify-content:space-between}
+.orz-nawig:empty{display:none}
+.sciezka{display:flex; flex-wrap:wrap; gap:6px 8px; align-items:center; font-size:.84rem}
+.sciezka a.przycisk{text-decoration:none; color:var(--ink); padding:4px 10px}
+.sc-lista{color:var(--ink-dim)} .sc-lista a{color:var(--accent)} .sc-sep{color:var(--ink-faint)}
+.w-wynikach{display:flex; gap:8px; align-items:center; font-size:.82rem; color:var(--ink-dim); margin-left:auto}
+.w-wynikach a.przycisk{text-decoration:none; color:var(--ink); padding:4px 10px}
+.w-wynikach a.wyl{opacity:.4; pointer-events:none}
+.t-nawig{position:sticky; top:0; z-index:2; background:var(--surface); padding-bottom:8px; margin-bottom:6px; border-bottom:1px solid var(--line)}
+.t-krok{display:flex; align-items:center; gap:8px; margin:2px 0 6px; font-size:.84rem}
+.t-krok span{min-width:110px; text-align:center}
+.t-spis{display:flex; flex-wrap:wrap; gap:4px}
+.t-spis button{min-width:30px; height:26px; border:1px solid var(--line); background:var(--hl); border-radius:5px; font-size:.78rem; cursor:pointer; padding:0 6px}
+.t-spis button.pw{background:var(--hl-pw)}
+.t-spis button.moja{background:var(--moja)}
+.t-spis button.oc-teza{box-shadow:inset 0 -3px 0 var(--ok)}
+.t-spis button.oc-nie_teza{box-shadow:inset 0 -3px 0 var(--nie); text-decoration:line-through}
+.t-spis button[aria-current="true"]{outline:2px solid var(--accent); outline-offset:1px; font-weight:700}
+.t-klaw{margin:6px 0 0; font-size:.72rem}
+@media (max-width:900px){ .orz-nawig{top:56px} .t-klaw{display:none} }
+
+/* ocena z uzasadnieniem */
+.oc-wybor{display:flex; gap:18px; margin:8px 0 0}
+.oc-wybor label{flex-direction:row; align-items:center; gap:6px; margin:0; color:var(--ink); font-size:.95rem}
+.blad-pola,.wal-lista .blad{color:var(--nie); font-size:.82rem; margin:0}
+.oc-uz{margin:6px 0 0; font-size:.8rem; color:var(--ink-dim); border-left:2px solid var(--line); padding-left:8px}
+.oc-uz b{font-weight:600; color:var(--ink)}
 </style>
 
 <header class="top"><div class="wrap gora-pasek">
@@ -308,8 +337,23 @@ dialog textarea,dialog input{padding:8px 10px; border:1px solid var(--line); bor
     <p class="maly" id="nt-orz"></p>
     <label>Treść tezy (możesz poprawić)<textarea id="nt-tekst" rows="6" required></textarea></label>
     <label>Przepisy (oddzielone średnikiem, opcjonalnie)<input id="nt-przepisy" placeholder="np. art. 448 k.c.; art. 24 k.c."></label>
-    <label>Komentarz (opcjonalnie)<input id="nt-kom"></label>
+    <label>Uzasadnienie (wymagane): dlaczego ten fragment jest tezą<textarea id="nt-kom" rows="3" required minlength="10" placeholder="np. formułuje ogólną regułę wykładni art. 448 k.c., niezależną od okoliczności sprawy"></textarea></label>
     <div class="akcje-okna"><button class="przycisk" value="anuluj" formnovalidate>Anuluj</button><button class="przycisk glowny" value="zapisz" id="nt-zapisz">Zapisz w zbiorze walidacyjnym</button></div>
+  </form>
+</dialog>
+
+<!-- okno: ocena tezy z obowiązkowym uzasadnieniem -->
+<dialog id="ocena-dlg" aria-labelledby="oc-h">
+  <form method="dialog" id="oc-form">
+    <h2 id="oc-h">Ocena tezy</h2>
+    <p class="maly" id="oc-teza"></p>
+    <div class="oc-wybor" role="radiogroup" aria-label="Ocena">
+      <label class="chk"><input type="radio" name="oc-dec" value="teza"> ✓ Trafna teza</label>
+      <label class="chk"><input type="radio" name="oc-dec" value="nie_teza"> ✗ Nie jest tezą</label>
+    </div>
+    <label>Uzasadnienie (wymagane)<textarea id="oc-uz" rows="4" required minlength="10"></textarea></label>
+    <p class="blad-pola" id="oc-blad" hidden>Podaj uzasadnienie oceny (co najmniej 10 znaków).</p>
+    <div class="akcje-okna"><button class="przycisk niebezp" value="usun" id="oc-usun" formnovalidate>Cofnij ocenę</button><span style="flex:1"></span><button class="przycisk" value="anuluj" formnovalidate>Anuluj</button><button class="przycisk glowny" value="zapisz">Zapisz ocenę</button></div>
   </form>
 </dialog>
 
@@ -485,7 +529,7 @@ var TRYBY={
 };
 var S={tryb:'zapytanie', q:'', pod:'bm25', sort:'wynik', w:'', o:'', t:''};
 var F={sad:'', typ:'', od:'', do:'', sedzia:'', haslo:'', zTezami:true};
-var WYNIKI=[], kluczWynikow=null, nrSzukania=0;
+var WYNIKI=[], kluczWynikow=null, nrSzukania=0, LISTA_IDS=[];
 
 function czytajAdres(){
   var h=location.hash.replace(/^#/,''), p={};
@@ -619,9 +663,11 @@ function podswietl(txt,q){
 }
 function rysujListe(){
   var el=document.getElementById('lista'), lic=document.getElementById('licznik');
-  if((S.tryb==='artykul'||S.tryb==='temat'||S.tryb==='klaster') && !S.w){ el.innerHTML=''; lic.textContent=S.tryb==='klaster'?'Wybierz skupisko powyżej.':S.tryb==='artykul'?'Wpisz artykuł albo wybierz go z listy powyżej.':'Wybierz temat z listy powyżej.'; return; }
-  if(S.tryb==='sytuacja' && !S.q){ el.innerHTML=''; lic.textContent='Opisz stan faktyczny – wyszukiwarka znajdzie orzeczenia o podobnych faktach i pokaże ich tezy.'; return; }
+  if((S.tryb==='artykul'||S.tryb==='temat'||S.tryb==='klaster') && !S.w){ el.innerHTML=''; LISTA_IDS=[]; lic.textContent=S.tryb==='klaster'?'Wybierz skupisko powyżej.':S.tryb==='artykul'?'Wpisz artykuł albo wybierz go z listy powyżej.':'Wybierz temat z listy powyżej.'; return; }
+  if(S.tryb==='sytuacja' && !S.q){ el.innerHTML=''; LISTA_IDS=[]; lic.textContent='Opisz stan faktyczny – wyszukiwarka znajdzie orzeczenia o podobnych faktach i pokaże ich tezy.'; return; }
   var w=posortowane(WYNIKI.filter(function(x){ return pasuje(x.o); })), zap=TRYBY[S.tryb].pod && S.q;
+  LISTA_IDS=w.slice(0,200).map(function(x){ return x.o.id; });
+  var nw=document.getElementById('orz-nawig'); if(nw && S.o) nw.innerHTML=sciezkaHTML()+wynikiHTML(S.o);
   var ukryte=WYNIKI.length-w.length;
   lic.innerHTML='<b>'+w.length+'</b> '+odm(w.length,'orzeczenie','orzeczenia','orzeczeń')+(ukryte?' <span class="info">('+ukryte+' ukrytych przez filtry)</span>':'')+
     ' · <span class="info" title="Znaczenie orzeczenia: tezy powtórzone w innych orzeczeniach (każda ×2) + liczba orzeczeń w zbiorze, które je powołują">'+(zap&&S.sort==='wynik'?'kolejność: trafność + znaczenie orzeczenia':S.sort==='data'?'od najnowszych':zap&&S.sort==='trafnosc'?'kolejność: trafność':'kolejność: znaczenie orzeczenia')+' ⓘ</span>';
@@ -712,22 +758,55 @@ function tezaHTML(o,tid,i){
     (t.zrodlowe&&t.zrodlowe.length?'<p class="t-takze">Teza powołuje: '+t.zrodlowe.map(function(z){ return ORZ[z]?linkOrz(z):esc(z); }).join(', ')+'</p>':'')+
     (k?'<details class="dlaczego"><summary>Dlaczego to teza?</summary><p>'+(k.walidator?esc(k.walidator):'<span class="info">Brak uzasadnienia walidatora.</span>')+'</p>'+wektorHTML(k.wektor)+'</details>':'')+
     '<div class="ocena" role="group" aria-label="Twoja ocena tezy"><button data-ocen="teza" aria-pressed="'+(!!oc&&oc.decyzja==='teza')+'">✓ Trafna teza</button><button data-ocen="nie_teza" aria-pressed="'+(!!oc&&oc.decyzja==='nie_teza')+'">✗ Nie jest tezą</button>'+
-      '<button data-kom title="Komentarz do oceny">'+(oc&&oc.komentarz?'✎ komentarz':'✎')+'</button></div></li>';
+      (oc?'<button data-kom title="Zmień ocenę lub uzasadnienie">✎ edytuj</button>':'')+'</div>'+(oc&&oc.uzasadnienie?'<p class="oc-uz"><b>Twoje uzasadnienie:</b> '+esc(oc.uzasadnienie)+'</p>':'')+'</li>';
 }
 function mojeHTML(o){
   var n=nowePrzyOrz(o.id);
   if(!n.length) return '';
   return '<h3 class="t-h">Tezy oznaczone przez Ciebie ('+n.length+')</h3><ol class="tezy">'+n.map(function(w,i){ return '<li class="teza moja" data-t="'+w.id+'"><div class="t-gora"><button class="t-nr" data-skocz="'+w.id+'">Twoja teza +'+(i+1)+'</button><span class="t-tem">'+data(w.data.slice(0,10))+'</span></div><p class="t-tekst">'+esc(w.tekst)+'</p>'+
-    (w.przepisy.length?'<div class="tagi">'+w.przepisy.map(tagPrz).join('')+'</div>':'')+(w.komentarz?'<p class="info">'+esc(w.komentarz)+'</p>':'')+
+    (w.przepisy.length?'<div class="tagi">'+w.przepisy.map(tagPrz).join('')+'</div>':'')+(w.uzasadnienie?'<p class="oc-uz"><b>Twoje uzasadnienie:</b> '+esc(w.uzasadnienie)+'</p>':'')+
     '<div class="ocena"><button data-usun="'+w.id+'">Usuń</button></div></li>'; }).join('')+'</ol>';
+}
+/* ścieżka przejść: orzeczenie otwarte z listy wyników zaczyna ścieżkę, a otwarte linkiem z treści orzeczenia
+   (ta sama teza także w…, powołane orzeczenia, powołują je) dopisuje się do niej; powrót do orzeczenia ze ścieżki
+   (przycisk, link albo „wstecz” w przeglądarce) skraca ją do tego miejsca. Każdy krok pamięta ostatnio wybraną tezę. */
+var SCIEZKA=[], zLinku=false, AKT_T='';
+document.getElementById('orzeczenie').addEventListener('click',function(e){
+  var a=e.target.closest&&e.target.closest('a[href^="#"]'); if(a && !a.hasAttribute('data-lista') && /[#&]o=/.test(a.getAttribute('href'))) zLinku=true; },true);
+function aktualizujSciezke(id){
+  var i=-1; SCIEZKA.forEach(function(x,k){ if(x.o===id) i=k; });
+  if(i>=0) SCIEZKA=SCIEZKA.slice(0,i+1);
+  else if(zLinku && SCIEZKA.length) SCIEZKA.push({o:id, t:''});
+  else SCIEZKA=[{o:id, t:''}];
+  zLinku=false;
+}
+function sciezkaHTML(){
+  if(SCIEZKA.length<2) return '';
+  var pop=SCIEZKA[SCIEZKA.length-2], pocz=SCIEZKA[0];
+  function link(x,tekst,kl){ return '<a class="'+(kl||'')+'" href="'+esc(adres({o:x.o, t:x.t}))+'">'+tekst+'</a>'; }
+  return '<nav class="sciezka" aria-label="Ścieżka przejść między orzeczeniami">'+
+    link(pop,'← Wróć do '+esc(ORZ[pop.o].sygnatura),'przycisk')+
+    (SCIEZKA.length>2?link(pocz,'⤒ Pierwotne: '+esc(ORZ[pocz.o].sygnatura),'przycisk'):'')+
+    '<span class="sc-lista">'+SCIEZKA.map(function(x,k){ return k===SCIEZKA.length-1?'<b>'+esc(ORZ[x.o].sygnatura)+'</b>':link(x,esc(ORZ[x.o].sygnatura)); }).join(' <span class="sc-sep">›</span> ')+'</span></nav>';
+}
+/* poprzednie / następne orzeczenie w bieżących wynikach (kolejność jak na liście) */
+function sasiedzi(id){
+  var i=LISTA_IDS.indexOf(id);
+  return {i:i, n:LISTA_IDS.length, pop:i>0?LISTA_IDS[i-1]:null, nast:i>=0&&i<LISTA_IDS.length-1?LISTA_IDS[i+1]:null};
+}
+function wynikiHTML(id){
+  var s=sasiedzi(id); if(s.i<0) return '';
+  return '<div class="w-wynikach"><a class="przycisk'+(s.pop?'':' wyl')+'" data-lista '+(s.pop?'href="'+esc(adres({o:s.pop, t:''}))+'"':'aria-disabled="true"')+' title="Poprzednie orzeczenie w wynikach (klawisz P)">‹ poprzednie</a>'+
+    '<span>'+(s.i+1)+' z '+s.n+' w wynikach</span><a class="przycisk'+(s.nast?'':' wyl')+'" data-lista '+(s.nast?'href="'+esc(adres({o:s.nast, t:''}))+'"':'aria-disabled="true"')+' title="Następne orzeczenie w wynikach (klawisz N)">następne ›</a></div>';
 }
 function pokazOrz(id,tid){
   var el=document.getElementById('orzeczenie'), o=ORZ[id];
   document.querySelector('.uklad').classList.toggle('z-orz',!!o);
-  if(!o){ el.innerHTML='<div class="pusto-duze">Wybierz orzeczenie z listy, aby zobaczyć jego treść, metrykę i tezy.</div>'; return; }
+  if(!o){ el.innerHTML='<div class="pusto-duze">Wybierz orzeczenie z listy, aby zobaczyć jego treść, metrykę i tezy.</div>'; el.dataset.o=''; SCIEZKA=[]; return; }
   if(el.dataset.o!==id){
     var pw=o.tezy_powtorzone||0, pl=(o.powolujace||[]).length;
-    el.innerHTML='<button class="przycisk wstecz" id="do-listy">← Wyniki</button>'+
+    aktualizujSciezke(id); AKT_T='';
+    el.innerHTML='<div class="orz-nawig" id="orz-nawig"></div><button class="przycisk wstecz" id="do-listy">← Wyniki</button>'+
       '<header class="orz-gl"><h2>'+esc(o.sygnatura)+'</h2><p class="orz-meta">'+esc(typOrz(o))+' · '+esc(o.sad||'')+(o.data?' · '+data(o.data):'')+'</p>'+
         (o.temat_llm?'<p class="orz-tem">'+esc(o.temat_llm)+'</p>':'')+
         '<div class="odznaki"><span class="odz">'+o.tezy.length+' '+odm(o.tezy.length,'teza','tezy','tez')+'</span>'+(pw?'<span class="odz pw">'+pw+' '+odm(pw,'powtórzona','powtórzone','powtórzonych')+' w innych orzeczeniach</span>':'')+(pl?'<span class="odz pl">powołuje je '+pl+' '+odm(pl,'orzeczenie','orzeczenia','orzeczeń')+' ze zbioru</span>':'')+'</div></header>'+
@@ -741,27 +820,57 @@ function pokazOrz(id,tid){
     document.getElementById('do-listy').onclick=function(){ idz({o:'', t:''}); };
     dok.addEventListener('click',function(e){ var m=e.target.closest('mark[data-t]'); if(m) aktywuj(m.dataset.t,'lista'); });
   }
+  document.getElementById('orz-nawig').innerHTML=sciezkaHTML()+wynikiHTML(id);
   rysujTezy(o);
   if(tid) setTimeout(function(){ aktywuj(tid,'tekst'); },30); else if(el.dataset.przewin!==id){ el.dataset.przewin=id; el.scrollTop=0; if(window.innerWidth<900) el.scrollIntoView(); }
 }
 function rysujTezy(o){
   var kol=document.getElementById('tezy-kol'); if(!kol) return;
-  kol.innerHTML='<h3 class="t-h">Tezy ('+o.tezy.length+')</h3>'+(o.tezy.length?'<ol class="tezy">'+o.tezy.map(function(tid,i){ return tezaHTML(o,tid,i); }).join('')+'</ol>':'<p class="info">Model nie wydobył z tego orzeczenia tez albo walidator odrzucił wszystkie kandydatury. Możesz zaznaczyć tezę w tekście.</p>')+mojeHTML(o);
+  var wsz=kolejnoscTez(o);
+  kol.innerHTML='<div class="t-nawig"><h3 class="t-h">Tezy ('+o.tezy.length+')</h3>'+(wsz.length?
+      '<div class="t-krok"><button class="przycisk maly" id="t-pop" title="Poprzednia teza (klawisz ←)" aria-label="Poprzednia teza">‹</button><span id="t-ktora"></span><button class="przycisk maly" id="t-nast" title="Następna teza (klawisz →)" aria-label="Następna teza">›</button></div>'+
+      '<div class="t-spis" aria-label="Spis tez">'+wsz.map(function(x,i){ var oc=ocena(x), moja=i>=o.tezy.length;
+        return '<button data-skocz="'+x+'" class="'+(moja?'moja':TEZ[x].takze.length?'pw':'')+(oc?' oc-'+oc.decyzja:'')+'" title="'+esc(krotko(moja?'Twoja teza':TEZ[x].tekst,140))+'">'+(moja?'+'+(i-o.tezy.length+1):i+1)+'</button>'; }).join('')+'</div>'+
+      '<p class="info t-klaw">Klawisze: ← → tezy · P / N orzeczenia w wynikach · W wróć</p>':'')+'</div>'+(o.tezy.length?'<ol class="tezy">'+o.tezy.map(function(tid,i){ return tezaHTML(o,tid,i); }).join('')+'</ol>':'<p class="info">Model nie wydobył z tego orzeczenia tez albo walidator odrzucił wszystkie kandydatury. Możesz zaznaczyć tezę w tekście.</p>')+mojeHTML(o);
   kol.querySelectorAll('[data-skocz]').forEach(function(b){ b.onclick=function(){ aktywuj(b.dataset.skocz,'tekst'); }; });
-  kol.querySelectorAll('[data-ocen]').forEach(function(b){ b.onclick=function(){ var tid=b.closest('.teza').dataset.t, oc=ocena(tid);
-    ocen(tid, oc&&oc.decyzja===b.dataset.ocen ? null : b.dataset.ocen); rysujTezy(o); }; });
-  kol.querySelectorAll('[data-kom]').forEach(function(b){ b.onclick=function(){ var tid=b.closest('.teza').dataset.t, oc=ocena(tid);
-    var k=window.prompt('Komentarz do oceny tezy (zapisze się razem z oceną):',oc&&oc.komentarz||''); if(k===null) return;
-    ocen(tid, oc?oc.decyzja:'teza', k); rysujTezy(o); }; });
+  if(wsz.length){ document.getElementById('t-pop').onclick=function(){ krokTezy(-1); }; document.getElementById('t-nast').onclick=function(){ krokTezy(1); }; }
+  if(AKT_T) aktywuj(AKT_T,null); else oznaczKrok();
+  kol.querySelectorAll('[data-ocen]').forEach(function(b){ b.onclick=function(){ oknoOceny(b.closest('.teza').dataset.t, b.dataset.ocen); }; });
+  kol.querySelectorAll('[data-kom]').forEach(function(b){ b.onclick=function(){ oknoOceny(b.closest('.teza').dataset.t, null); }; });
   kol.querySelectorAll('[data-usun]').forEach(function(b){ b.onclick=function(){ usunWpis('nowa|'+b.dataset.usun); var el=document.getElementById('orzeczenie'); el.dataset.o=''; pokazOrz(o.id); }; });
 }
+function kolejnoscTez(o){ return o.tezy.concat(nowePrzyOrz(o.id).map(function(w){ return w.id; })); }
+function oznaczKrok(){
+  var o=ORZ[S.o], el=document.getElementById('t-ktora'); if(!o||!el) return;
+  var wsz=kolejnoscTez(o), i=wsz.indexOf(AKT_T);
+  el.textContent=i<0?'przeglądaj tezy':(i<o.tezy.length?'Teza '+(i+1):'Twoja teza +'+(i-o.tezy.length+1))+' z '+wsz.length;
+  document.querySelectorAll('.t-spis button').forEach(function(b){ b.setAttribute('aria-current',String(b.dataset.skocz===AKT_T)); });
+}
+function krokTezy(d){
+  var o=ORZ[S.o]; if(!o) return; var wsz=kolejnoscTez(o); if(!wsz.length) return;
+  var i=wsz.indexOf(AKT_T); i=i<0?(d>0?0:wsz.length-1):Math.min(wsz.length-1,Math.max(0,i+d));
+  aktywuj(wsz[i],'tekst');
+}
 function aktywuj(tid,dokad){
+  AKT_T=tid; if(SCIEZKA.length) SCIEZKA[SCIEZKA.length-1].t=tid;
+  if(S.t!==tid && TEZ[tid] && TEZ[tid].orzeczenie===S.o){ S.t=tid; history.replaceState(null,'',adres({})); }  /* odświeżenie strony wraca do tej tezy */
   document.querySelectorAll('#orzeczenie .akt').forEach(function(x){ x.classList.remove('akt'); });
   var marks=document.querySelectorAll('#dok mark[data-t="'+tid+'"]'), li=document.querySelector('#tezy-kol [data-t="'+tid+'"]');
   [].forEach.call(marks,function(m){ m.classList.add('akt'); }); if(li) li.classList.add('akt');
   if(dokad==='tekst'){ if(marks.length) marks[0].scrollIntoView({behavior:'smooth',block:'center'}); else { if(li) li.scrollIntoView({behavior:'smooth',block:'nearest'}); komunikat('Tej tezy nie udało się odnaleźć w tekście orzeczenia (model sparafrazował fragment).'); } }
-  else if(li) li.scrollIntoView({behavior:'smooth',block:'nearest'});
+  else if(dokad && li) li.scrollIntoView({behavior:'smooth',block:'nearest'});
+  oznaczKrok();
 }
+/* klawisze w widoku orzeczenia (poza polami formularzy i oknami) */
+document.addEventListener('keydown',function(e){
+  if(!S.o || e.altKey || e.ctrlKey || e.metaKey || document.querySelector('dialog[open]')) return;
+  var t=e.target, tag=t&&t.tagName; if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||(t&&t.isContentEditable)) return;
+  var k=e.key;
+  if(k==='ArrowRight'&&!e.shiftKey){ e.preventDefault(); krokTezy(1); }
+  else if(k==='ArrowLeft'&&!e.shiftKey){ e.preventDefault(); krokTezy(-1); }
+  else if(k==='n'||k==='N'||k==='p'||k==='P'){ var s=sasiedzi(S.o), cel=(k==='n'||k==='N')?s.nast:s.pop; if(cel) idz({o:cel, t:''}); }
+  else if((k==='w'||k==='W') && SCIEZKA.length>1){ var x=SCIEZKA[SCIEZKA.length-2]; idz({o:x.o, t:x.t}); }
+});
 
 /* zaznaczenie fragmentu tekstu -> „Oznacz jako tezę” */
 var zaznaczenie=null;
@@ -781,26 +890,58 @@ document.getElementById('zazn-btn').onclick=function(){
   var o=ORZ[S.o]; if(!o||!zaznaczenie) return;
   document.getElementById('zazn-pop').hidden=true;
   document.getElementById('nt-orz').textContent=o.sygnatura+' · '+(o.sad||'');
-  document.getElementById('nt-tekst').value=zaznaczenie.tekst; document.getElementById('nt-przepisy').value=''; document.getElementById('nt-kom').value='';
+  document.getElementById('nt-tekst').value=zaznaczenie.tekst; document.getElementById('nt-przepisy').value=''; document.getElementById('nt-kom').value=''; document.getElementById('nt-kom').setCustomValidity && document.getElementById('nt-kom').setCustomValidity('');
   var dlg=document.getElementById('nowa-teza'); if(dlg.showModal) dlg.showModal(); else dlg.setAttribute('open','');
 };
 document.getElementById('nt-form').onsubmit=function(e){
   var dlg=document.getElementById('nowa-teza');
   if(e.submitter && e.submitter.value==='anuluj'){ return; }
-  var o=ORZ[S.o], txt=document.getElementById('nt-tekst').value.trim(); if(!o||!txt){ return; }
+  var o=ORZ[S.o], txt=document.getElementById('nt-tekst').value.trim(), uz=document.getElementById('nt-kom').value.trim();
+  if(!o||!txt){ return; }
+  if(uz.length<10){ e.preventDefault(); komunikat('Podaj uzasadnienie, dlaczego ten fragment jest tezą (co najmniej 10 znaków).'); document.getElementById('nt-kom').focus(); return; }
   dodajNowa(o, txt, document.getElementById('nt-przepisy').value.split(';').map(function(x){ return x.trim(); }).filter(Boolean), document.getElementById('nt-kom').value.trim(), zaznaczenie&&zaznaczenie.poczatek);
   if(!dlg.close) dlg.removeAttribute('open');
   var el=document.getElementById('orzeczenie'); el.dataset.o=''; pokazOrz(o.id);
   komunikat('Teza zapisana w zbiorze walidacyjnym.');
 };
 
+/* ocena tezy: akceptacja lub odrzucenie zawsze z uzasadnieniem (okno); cofnięcie oceny bez uzasadnienia */
+var ocenianaTeza=null;
+function oknoOceny(tid,decyzja){
+  var oc=ocena(tid), t=TEZ[tid]; ocenianaTeza=tid;
+  document.getElementById('oc-teza').textContent=krotko(t.tekst,300);
+  var dec=decyzja||(oc&&oc.decyzja)||'';
+  document.querySelectorAll('[name="oc-dec"]').forEach(function(r){ r.checked=r.value===dec; });
+  document.getElementById('oc-uz').value=oc&&oc.uzasadnienie||'';
+  document.getElementById('oc-uz').placeholder=dec==='nie_teza'?'np. fragment opisuje okoliczności tej sprawy, nie formułuje ogólnej reguły':'np. formułuje ogólną regułę, którą sąd stosuje także w innych sprawach';
+  document.getElementById('oc-usun').hidden=!oc; document.getElementById('oc-blad').hidden=true;
+  var d=document.getElementById('ocena-dlg'); if(d.showModal) d.showModal(); else d.setAttribute('open','');
+  document.getElementById('oc-uz').focus();
+}
+document.querySelectorAll('[name="oc-dec"]').forEach(function(r){ r.onchange=function(){ document.getElementById('oc-uz').placeholder=r.value==='nie_teza'?'np. fragment opisuje okoliczności tej sprawy, nie formułuje ogólnej reguły':'np. formułuje ogólną regułę, którą sąd stosuje także w innych sprawach'; }; });
+document.getElementById('oc-form').onsubmit=function(e){
+  var d=document.getElementById('ocena-dlg'), tid=ocenianaTeza, akcja=e.submitter&&e.submitter.value;
+  if(!tid || akcja==='anuluj'){ if(!d.close) d.removeAttribute('open'); return; }
+  if(akcja==='usun'){ ocen(tid,null); }
+  else {
+    var r=document.querySelector('[name="oc-dec"]:checked'), uz=document.getElementById('oc-uz').value.trim();
+    if(!r || uz.length<10){ e.preventDefault(); var b=document.getElementById('oc-blad'); b.textContent=!r?'Wybierz ocenę: trafna teza albo nie jest tezą.':'Podaj uzasadnienie oceny (co najmniej 10 znaków).'; b.hidden=false; document.getElementById('oc-uz').focus(); return; }
+    ocen(tid,r.value,uz);
+  }
+  if(!d.close) d.removeAttribute('open');
+  var o=ORZ[TEZ[tid].orzeczenie]; if(o && S.o===o.id) rysujTezy(o);
+  komunikat(akcja==='usun'?'Ocena cofnięta.':'Ocena zapisana w zbiorze walidacyjnym.');
+};
+
 /* ---------- zbiór walidacyjny: oceny tez i tezy oznaczone ręcznie ----------
    Zapis w pamięci tej przeglądarki (localStorage); eksport do pliku JSON/CSV i import z pliku JSON.
-   Wpis „ocena”: {rodzaj, teza, orzeczenie, sygnatura, tekst, decyzja: teza|nie_teza, komentarz, autor, data}
-   Wpis „nowa”:  {rodzaj, id, orzeczenie, sygnatura, tekst, przepisy[], komentarz, poczatek (znak w tekście), autor, data} */
+   Wpis „ocena”: {rodzaj, teza, orzeczenie, sygnatura, tekst, decyzja: teza|nie_teza, uzasadnienie (wymagane), autor, data}
+   Wpis „nowa”:  {rodzaj, id, orzeczenie, sygnatura, tekst, przepisy[], uzasadnienie (wymagane), poczatek (znak w tekście), autor, data} */
 var KLUCZ_WAL='orzeczenia-tezy:zbior-walidacyjny:v1';
 var WAL={autor:'', wpisy:{}}, walPamiec=true;
-try{ var zap=localStorage.getItem(KLUCZ_WAL); if(zap){ var p=JSON.parse(zap); if(p&&p.wpisy) WAL=p; } }catch(e){ walPamiec=false; }
+/* wpisy sprzed obowiązkowego uzasadnienia miały pole „komentarz” */
+function zgodny(w){ if(w && w.uzasadnienie==null){ w.uzasadnienie=w.komentarz||''; delete w.komentarz; } return w; }
+try{ var zap=localStorage.getItem(KLUCZ_WAL); if(zap){ var p=JSON.parse(zap); if(p&&p.wpisy){ WAL=p; Object.keys(WAL.wpisy).forEach(function(k){ zgodny(WAL.wpisy[k]); }); } } }catch(e){ walPamiec=false; }
 function walZapisz(){
   try{ localStorage.setItem(KLUCZ_WAL,JSON.stringify(WAL)); }
   catch(e){ if(walPamiec){ walPamiec=false; komunikat('Ta przeglądarka nie pozwala zapisywać danych strony – oceny przetrwają tylko do zamknięcia karty. Wyeksportuj je do pliku.'); } }
@@ -809,17 +950,17 @@ function walZapisz(){
 function walLicznik(){ document.getElementById('walidacja-licznik').textContent=Object.keys(WAL.wpisy).length; }
 function teraz(){ return new Date().toISOString(); }
 function ocena(tid){ return WAL.wpisy['ocena|'+tid]||null; }
-function ocen(tid,decyzja,komentarz){
+function ocen(tid,decyzja,uzasadnienie){
   var t=TEZ[tid], o=ORZ[t.orzeczenie], k='ocena|'+tid;
   if(!decyzja){ delete WAL.wpisy[k]; walZapisz(); return; }
   var stary=WAL.wpisy[k];
   WAL.wpisy[k]={rodzaj:'ocena', teza:tid, orzeczenie:o.id, sygnatura:o.sygnatura, tekst:t.tekst, decyzja:decyzja,
-    komentarz:komentarz!=null?komentarz:(stary&&stary.komentarz)||'', autor:WAL.autor||'', data:teraz()};
+    uzasadnienie:uzasadnienie!=null?uzasadnienie:(stary&&stary.uzasadnienie)||'', autor:WAL.autor||'', data:teraz()};
   walZapisz();
 }
-function dodajNowa(o,tekst,przepisy,komentarz,poczatek){
+function dodajNowa(o,tekst,przepisy,uzasadnienie,poczatek){
   var id='R'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  WAL.wpisy['nowa|'+id]={rodzaj:'nowa', id:id, orzeczenie:o.id, sygnatura:o.sygnatura, tekst:tekst, przepisy:przepisy, komentarz:komentarz||'',
+  WAL.wpisy['nowa|'+id]={rodzaj:'nowa', id:id, orzeczenie:o.id, sygnatura:o.sygnatura, tekst:tekst, przepisy:przepisy, uzasadnienie:uzasadnienie||'',
     poczatek:poczatek==null?null:poczatek, autor:WAL.autor||'', data:teraz()};
   walZapisz();
 }
@@ -843,7 +984,7 @@ function eksportJSON(){
     liczba_orzeczen:D.orzeczenia.length, liczba_tez:D.tezy.length, wpisy:wpisyPosortowane()},null,1);
 }
 function eksportCSV(){
-  var kol=['rodzaj','orzeczenie','sygnatura','teza','decyzja','tekst','przepisy','komentarz','autor','data'];
+  var kol=['rodzaj','orzeczenie','sygnatura','teza','decyzja','tekst','przepisy','uzasadnienie','autor','data'];
   function pole(v){ v=Array.isArray(v)?v.join('; '):String(v==null?'':v); return /[";\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
   return '﻿'+kol.join(';')+'\r\n'+wpisyPosortowane().map(function(w){ return kol.map(function(k){ return pole(k==='teza'?(w.teza||w.id):k==='decyzja'?(w.decyzja||'teza (dopisana)'):w[k]); }).join(';'); }).join('\r\n')+'\r\n';
 }
@@ -851,7 +992,7 @@ function eksportCSV(){
 function importuj(tekst){
   var d=JSON.parse(tekst), n=0;
   if(!d || !Array.isArray(d.wpisy)) throw new Error('to nie jest plik zbioru walidacyjnego');
-  d.wpisy.forEach(function(w){ if(!w || (w.rodzaj!=='ocena'&&w.rodzaj!=='nowa')) return;
+  d.wpisy.forEach(function(w){ if(!w || (w.rodzaj!=='ocena'&&w.rodzaj!=='nowa')) return; zgodny(w);
     var k=w.rodzaj==='ocena'?'ocena|'+w.teza:'nowa|'+w.id; if(k.indexOf('undefined')>=0) return;
     if(!WAL.wpisy[k] || String(WAL.wpisy[k].data)<String(w.data)){ WAL.wpisy[k]=w; n++; } });
   walZapisz(); return n;
@@ -863,7 +1004,7 @@ function rysujWalidacje(){
   document.getElementById('wal-stat').innerHTML='<span><b>'+oc.length+'</b> '+odm(oc.length,'ocena','oceny','ocen')+' tez ('+tak+' trafnych, '+(oc.length-tak)+' odrzuconych)</span><span><b>'+(w.length-oc.length)+'</b> '+odm(w.length-oc.length,'teza dopisana','tezy dopisane','tez dopisanych')+'</span>'+(walPamiec?'':'<span class="blad">zapis w przeglądarce niedostępny – wyeksportuj plik</span>');
   document.getElementById('wal-lista').innerHTML=w.length?'<table><thead><tr><th>Orzeczenie</th><th>Teza</th><th>Ocena</th><th></th></tr></thead><tbody>'+w.map(function(x){
     var k=x.rodzaj==='ocena'?'ocena|'+x.teza:'nowa|'+x.id;
-    return '<tr><td><a href="'+esc(adres({o:x.orzeczenie, t:x.rodzaj==='ocena'?x.teza:''}))+'" data-zamknij>'+esc(x.sygnatura)+'</a></td><td>'+esc(krotko(x.tekst,160))+(x.komentarz?'<div class="info">'+esc(x.komentarz)+'</div>':'')+'</td>'+
+    return '<tr><td><a href="'+esc(adres({o:x.orzeczenie, t:x.rodzaj==='ocena'?x.teza:''}))+'" data-zamknij>'+esc(x.sygnatura)+'</a></td><td>'+esc(krotko(x.tekst,160))+(x.uzasadnienie?'<div class="info"><b>Uzasadnienie:</b> '+esc(x.uzasadnienie)+'</div>':'<div class="blad">brak uzasadnienia</div>')+'</td>'+
       '<td>'+(x.rodzaj==='nowa'?'<span class="odz moja">dopisana</span>':x.decyzja==='teza'?'<span class="odz ok">✓ trafna</span>':'<span class="odz nie">✗ nie teza</span>')+'</td><td><button class="przycisk maly" data-usun-k="'+esc(k)+'" aria-label="Usuń wpis">✕</button></td></tr>'; }).join('')+'</tbody></table>'
     :'<p class="info">Zbiór jest pusty. Oceń tezy przyciskami „✓ Trafna teza” / „✗ Nie jest tezą” albo zaznacz w tekście orzeczenia fragment, który jest tezą.</p>';
   document.querySelectorAll('#wal-lista [data-usun-k]').forEach(function(b){ b.onclick=function(){ usunWpis(b.dataset.usunK); rysujWalidacje(); odswiezOrz(); }; });

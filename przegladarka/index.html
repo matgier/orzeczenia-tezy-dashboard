@@ -825,7 +825,13 @@ function nowePrzyOrz(oid){ return Object.keys(WAL.wpisy).map(function(k){ return
 function usunWpis(k){ delete WAL.wpisy[k]; walZapisz(); }
 function wpisyPosortowane(){ return Object.keys(WAL.wpisy).map(function(k){ return WAL.wpisy[k]; }).sort(function(a,b){ return a.sygnatura.localeCompare(b.sygnatura,'pl')||(a.data<b.data?-1:1); }); }
 
+/* zapis pliku: w podglądzie artefaktu claude.ai przez uprawnienie „downloads” (przeglądarka pyta o zgodę),
+   gdzie indziej (Mac, GitHub Pages) zwykłe pobranie przez link */
+var POBIERANIE=null;
+if(window.claude && window.claude.use) window.claude.use('downloads').then(function(d){ POBIERANIE=d; }).catch(function(){});
 function pobierz(nazwa,typ,tresc){
+  if(POBIERANIE){ POBIERANIE.save({filename:nazwa, data:tresc}).then(function(){ komunikat('Zapisano plik '+nazwa+'.'); })
+    .catch(function(e){ if(e&&e.code!=='declined') komunikat('Nie udało się zapisać pliku ('+(e&&e.code||'błąd')+').'); }); return; }
   var a=document.createElement('a'), url=URL.createObjectURL(new Blob([tresc],{type:typ}));
   a.href=url; a.download=nazwa; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); },500);
 }

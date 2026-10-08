@@ -722,17 +722,17 @@ function bm(cel){
 
 /* serwer wyszukiwania znaczeniowego (aplikacja/serwer.py) -- strona sprawdza, czy ją podaje */
 var SERWER=null, POWOD='';
-var JAK_WLACZYC=' Aby włączyć: w folderze projektu na swoim komputerze uruchom <code>./uruchom_wyszukiwarke.sh</code> – otworzy stronę pod adresem http://127.0.0.1:8765/ z działającymi modelami.';
+var JAK_WLACZYC=' W celu uruchomienia pełnej wersji należy wykonać w katalogu projektu polecenie <code>./uruchom_wyszukiwarke.sh</code>; wyszukiwarka zostanie otwarta pod adresem http://127.0.0.1:8765/ wraz z modelami językowymi.';
 /* dlaczego nie ma wyszukiwania znaczeniowego: modele (BGE-M3, MMLW) liczą wektor zapytania w Pythonie, więc działa ono
    tylko wtedy, gdy stronę podaje serwer wyszukiwarki (aplikacja/serwer.py) uruchomiony na komputerze użytkownika */
 function wykryjSerwer(gotowe){
   var host=location.hostname;
-  if(!/^https?:/.test(location.protocol)){ POWOD='Strona jest otwarta jako plik z dysku – nie stoi za nią serwer z modelami językowymi, a przeglądarka nie może ich uruchomić sama.'+JAK_WLACZYC; gotowe(); return; }
-  if(/claude\.ai$|claudeusercontent|github\.io$/.test(host)){ POWOD='Ta kopia strony ('+(/github/.test(host)?'GitHub Pages':'claude.ai')+') jest statyczna: modele BGE-M3 i MMLW działają w Pythonie na Twoim komputerze, a strona z internetu nie może ich uruchomić ani połączyć się z programem na Twoim komputerze (blokuje to przeglądarka).'+JAK_WLACZYC; gotowe(); return; }
-  if(!window.fetch){ POWOD='Ta przeglądarka nie obsługuje połączeń z serwerem wyszukiwarki (brak fetch).'; gotowe(); return; }
+  if(!/^https?:/.test(location.protocol)){ POWOD='Strona została otwarta jako plik lokalny, bez serwera wyszukiwarki; przeglądarka nie może samodzielnie uruchomić modeli językowych.'+JAK_WLACZYC; gotowe(); return; }
+  if(/claude\.ai$|claudeusercontent|github\.io$/.test(host)){ POWOD='Niniejsza wersja strony ('+(/github/.test(host)?'GitHub Pages':'claude.ai')+') ma charakter statyczny. Wyszukiwanie według znaczenia wymaga modeli językowych BGE-M3 i MMLW, uruchamianych lokalnie w środowisku Python; ze względów bezpieczeństwa przeglądarka nie pozwala stronie internetowej na ich uruchomienie ani na połączenie z programem działającym na komputerze użytkownika.'+JAK_WLACZYC; gotowe(); return; }
+  if(!window.fetch){ POWOD='Przeglądarka nie obsługuje połączenia z serwerem wyszukiwarki.'; gotowe(); return; }
   fetch('api/stan').then(function(r){ if(!r.ok) throw new Error('odpowiedź HTTP '+r.status+' – pod tym adresem nie działa serwer wyszukiwarki'); return r.json(); })
-    .then(function(s){ SERWER=s&&s.ok?s:null; if(!SERWER) POWOD='Serwer odpowiedział, ale nie potwierdził gotowości modeli.'; gotowe(); })
-    .catch(function(e){ POWOD='Nie udało się połączyć z serwerem wyszukiwarki ('+(e&&e.message&&/HTTP/.test(e.message)?e.message:'serwer nie odpowiada – mógł zostać zatrzymany')+').'+JAK_WLACZYC; gotowe(); });
+    .then(function(s){ SERWER=s&&s.ok?s:null; if(!SERWER) POWOD='Serwer wyszukiwarki odpowiedział, lecz nie potwierdził gotowości modeli językowych.'; gotowe(); })
+    .catch(function(e){ POWOD='Nie nawiązano połączenia z serwerem wyszukiwarki ('+(e&&e.message&&/HTTP/.test(e.message)?e.message:'serwer nie odpowiada; mógł zostać zatrzymany')+').'+JAK_WLACZYC; gotowe(); });
 }
 function zSerwera(model,cel,q,k){
   return fetch('api/szukaj?model='+model+'&cel='+cel+'&k='+k+'&q='+encodeURIComponent(q)).then(function(r){ if(!r.ok) throw new Error('serwer '+r.status); return r.json(); }).then(function(d){ return d.wyniki; });
@@ -943,7 +943,7 @@ function ustawPasek(){
   document.querySelectorAll('[name=gdzie]').forEach(function(r){ r.checked=(r.value==='tekst')===pt; });
   if(S.tryb==='zapytanie') (q.placeholder=pt?'Słowa albo fraza w cudzysłowie z treści orzeczeń, np. „rażąco niska cena” albo przeludnienie 3 m2':TRYBY.zapytanie.ph);
   [].forEach.call(pod.options,function(op){ op.disabled=op.value!=='bm25' && !SERWER; });
-  document.getElementById('pod-info').innerHTML=TRYBY[S.tryb].pod && !SERWER ? '<b>Działa tylko podobieństwo słów (BM25).</b> '+(POWOD||'Brak serwera wyszukiwarki.') : '';
+  document.getElementById('pod-info').innerHTML=TRYBY[S.tryb].pod && !SERWER ? '<b>Dostępne jest wyłącznie wyszukiwanie według słów (BM25).</b> '+(POWOD||'Serwer wyszukiwarki jest niedostępny.') : '';
   var so=document.getElementById('sortowanie'); so.value=S.sort;
   so.options[0].disabled=so.options[1].disabled=!(TRYBY[S.tryb].pod && S.q);
   if(so.options[so.selectedIndex].disabled) so.value='znaczenie';
@@ -1007,7 +1007,7 @@ function szukajWynikow(){
   else if(S.tryb==='klaster') p=trybKlaster(S.w);
   else p=trybSytuacja(S.q,S.pod);
   return p.then(function(w){ if(nr!==nrSzukania) return null; WYNIKI=w; kluczWynikow=klucz; return w; })
-    .catch(function(e){ if(nr!==nrSzukania) return null; komunikat('Wyszukiwanie znaczeniowe nie odpowiada ('+e.message+') – używam wyszukiwania po słowach.'); SERWER=null; POWOD='Serwer wyszukiwarki przestał odpowiadać w trakcie pracy ('+e.message+') – mógł zostać zatrzymany albo komputer przeszedł w uśpienie.'+JAK_WLACZYC; ustawPasek(); return szukajWynikow(); });
+    .catch(function(e){ if(nr!==nrSzukania) return null; komunikat('Wyszukiwanie według znaczenia jest niedostępne ('+e.message+'); zastosowano wyszukiwanie według słów.'); SERWER=null; POWOD='Serwer wyszukiwarki przestał odpowiadać ('+e.message+'); mógł zostać zatrzymany lub komputer przeszedł w stan uśpienia.'+JAK_WLACZYC; ustawPasek(); return szukajWynikow(); });
 }
 function wynikOrz(x){ return (x.rel==null?0:x.rel)+WAGA_ZNACZENIA*Math.log2(1+znaczenie(x.o)); }
 function posortowane(w){
